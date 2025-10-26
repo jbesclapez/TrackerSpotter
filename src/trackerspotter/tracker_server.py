@@ -52,24 +52,13 @@ class TrackerServer:
         self.app.config['SECRET_KEY'] = 'trackerspotter-secret-key-change-in-production'
         
         # Initialize SocketIO for real-time updates
-        # Use threading mode for PyInstaller compatibility
-        try:
-            # Try threading mode first (best for PyInstaller)
-            self.socketio = SocketIO(
-                self.app, 
-                cors_allowed_origins="*",
-                async_mode='threading',
-                logger=False,  # Disable verbose logging in production
-                engineio_logger=False
-            )
-        except ValueError:
-            # Fallback: let it auto-detect
-            self.socketio = SocketIO(
-                self.app, 
-                cors_allowed_origins="*",
-                logger=False,
-                engineio_logger=False
-            )
+        # Don't specify async_mode - let Flask-SocketIO auto-detect in PyInstaller
+        self.socketio = SocketIO(
+            self.app, 
+            cors_allowed_origins="*",
+            logger=False,  # Disable verbose logging in production
+            engineio_logger=False
+        )
         
         # Initialize database
         self.db = Database()

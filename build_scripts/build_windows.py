@@ -58,11 +58,16 @@ def build_executable():
         "--hidden-import=flask",
         "--hidden-import=flask_socketio",
         "--hidden-import=socketio",
+        "--hidden-import=socketio.server",
         "--hidden-import=engineio",
+        "--hidden-import=engineio.server",
+        "--hidden-import=engineio.async_drivers.threading",
         "--hidden-import=bencodepy",
         "--hidden-import=simple_websocket",
         "--hidden-import=wsproto",
-        "--hidden-import=simple_websocket.ws",
+        "--hidden-import=wsproto.connection",
+        "--hidden-import=wsproto.events",
+        "--hidden-import=h11",
         
         # Console for debugging (remove --windowed above and uncomment this for debug builds)
         # "--console",
