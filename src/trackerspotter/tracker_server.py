@@ -59,16 +59,16 @@ class TrackerServer:
                 self.app, 
                 cors_allowed_origins="*",
                 async_mode='threading',
-                logger=True,
-                engineio_logger=True
+                logger=False,  # Disable verbose logging in production
+                engineio_logger=False
             )
         except ValueError:
             # Fallback: let it auto-detect
             self.socketio = SocketIO(
                 self.app, 
                 cors_allowed_origins="*",
-                logger=True,
-                engineio_logger=True
+                logger=False,
+                engineio_logger=False
             )
         
         # Initialize database
@@ -195,8 +195,6 @@ class TrackerServer:
                 else:
                     events = self.db.get_recent_announces(limit=limit)
                 
-                logger.info(f"Fetched {len(events)} events from database")
-                
                 # Clean up events for JSON serialization
                 clean_events = []
                 for event in events:
@@ -213,8 +211,6 @@ class TrackerServer:
                 })
             except Exception as e:
                 logger.error(f"Error fetching events: {e}", exc_info=True)
-                import traceback
-                traceback.print_exc()
                 return jsonify({'success': False, 'error': str(e)}), 500
         
         @self.app.route('/api/torrents')
@@ -357,11 +353,7 @@ class TrackerServer:
             event: AnnounceEvent to broadcast
         """
         try:
-            event_dict = event.to_dict()
-            logger.info(f"Broadcasting event via WebSocket: {event.event_type} | {event.info_hash_hex[:8]}...")
-            logger.info(f"Event data: {event_dict}")
-            self.socketio.emit('new_announce', event_dict)
-            logger.info("WebSocket emit completed")
+            self.socketio.emit('new_announce', event.to_dict())
         except Exception as e:
             logger.error(f"Error broadcasting event: {e}", exc_info=True)
     

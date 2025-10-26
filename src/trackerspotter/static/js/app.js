@@ -116,11 +116,6 @@ async function loadStats() {
 
 // Handle new announce from WebSocket
 function handleNewAnnounce(event) {
-    console.log('Handling new announce:', event);
-    console.log('Event user_agent:', event.user_agent);
-    console.log('Is UDP?', event.user_agent === 'UDP');
-    console.log('Current allEvents length:', allEvents.length);
-    
     // Ensure event has required fields
     if (!event.info_hash_hex || !event.timestamp) {
         console.error('Invalid event received:', event);
@@ -134,11 +129,9 @@ function handleNewAnnounce(event) {
     
     // Add to beginning of array
     allEvents.unshift(event);
-    console.log('Added event, new allEvents length:', allEvents.length);
     
     // Apply filters to update the display
     applyFilters();
-    console.log('After applyFilters, filteredEvents length:', filteredEvents.length);
     
     // Update stats and torrent filter
     loadStats();
@@ -147,7 +140,6 @@ function handleNewAnnounce(event) {
     // Highlight the new row after rendering
     setTimeout(() => {
         const firstRow = document.querySelector('#eventsTableBody tr:first-child');
-        console.log('First row:', firstRow);
         if (firstRow && !firstRow.classList.contains('no-events')) {
             firstRow.classList.add('highlight');
         }
@@ -192,11 +184,9 @@ function applyFilters() {
 
 // Rendering
 function renderEvents() {
-    console.log('renderEvents called, filteredEvents.length:', filteredEvents.length);
     const tbody = document.getElementById('eventsTableBody');
     
     if (filteredEvents.length === 0) {
-        console.log('No filtered events, allEvents.length:', allEvents.length);
         tbody.innerHTML = `
             <tr class="no-events">
                 <td colspan="8">
@@ -213,8 +203,6 @@ function renderEvents() {
         `;
         return;
     }
-    
-    console.log('Rendering', filteredEvents.length, 'events');
     
     tbody.innerHTML = filteredEvents.map(event => {
         const eventType = event.event || 'update';
