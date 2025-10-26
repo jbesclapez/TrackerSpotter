@@ -116,20 +116,39 @@ async function loadStats() {
 
 // Handle new announce from WebSocket
 function handleNewAnnounce(event) {
+    console.log('Handling new announce:', event);
+    console.log('Event user_agent:', event.user_agent);
+    console.log('Is UDP?', event.user_agent === 'UDP');
+    console.log('Current allEvents length:', allEvents.length);
+    
+    // Ensure event has required fields
+    if (!event.info_hash_hex || !event.timestamp) {
+        console.error('Invalid event received:', event);
+        return;
+    }
+    
+    // Generate a temporary ID if not present
+    if (!event.id) {
+        event.id = Date.now() + Math.random();
+    }
+    
     // Add to beginning of array
     allEvents.unshift(event);
+    console.log('Added event, new allEvents length:', allEvents.length);
     
-    // Update filters if needed
+    // Apply filters to update the display
     applyFilters();
+    console.log('After applyFilters, filteredEvents length:', filteredEvents.length);
     
-    // Update stats
+    // Update stats and torrent filter
     loadStats();
     loadTorrents();
     
-    // Highlight the new row
+    // Highlight the new row after rendering
     setTimeout(() => {
         const firstRow = document.querySelector('#eventsTableBody tr:first-child');
-        if (firstRow) {
+        console.log('First row:', firstRow);
+        if (firstRow && !firstRow.classList.contains('no-events')) {
             firstRow.classList.add('highlight');
         }
     }, 100);
@@ -173,9 +192,11 @@ function applyFilters() {
 
 // Rendering
 function renderEvents() {
+    console.log('renderEvents called, filteredEvents.length:', filteredEvents.length);
     const tbody = document.getElementById('eventsTableBody');
     
     if (filteredEvents.length === 0) {
+        console.log('No filtered events, allEvents.length:', allEvents.length);
         tbody.innerHTML = `
             <tr class="no-events">
                 <td colspan="8">
@@ -193,6 +214,8 @@ function renderEvents() {
         return;
     }
     
+    console.log('Rendering', filteredEvents.length, 'events');
+    
     tbody.innerHTML = filteredEvents.map(event => {
         const eventType = event.event || 'update';
         const time = formatTime(event.timestamp);
@@ -202,10 +225,19 @@ function renderEvents() {
         const left = formatBytes(event.left);
         const progress = calculateProgress(event.downloaded, event.left);
         
+        // Determine protocol (UDP if user_agent is 'UDP', otherwise HTTP)
+        const isUDP = event.user_agent === 'UDP';
+        const protocolBadge = isUDP 
+            ? '<span class="protocol-badge udp" title="UDP Protocol">UDP</span>' 
+            : '<span class="protocol-badge http" title="HTTP Protocol">HTTP</span>';
+        
         return `
             <tr onclick="showEventDetails(${event.id})">
                 <td>${time}</td>
-                <td><span class="event-badge ${eventType}">${eventType.toUpperCase()}</span></td>
+                <td>
+                    <span class="event-badge ${eventType}">${eventType.toUpperCase()}</span>
+                    ${protocolBadge}
+                </td>
                 <td><span class="torrent-hash" title="${event.info_hash_hex}">${hash}</span></td>
                 <td>${event.client_ip}:${event.client_port}</td>
                 <td>↓ ${downloaded}</td>

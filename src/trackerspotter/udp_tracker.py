@@ -28,7 +28,8 @@ PROTOCOL_ID = 0x41727101980  # Magic constant for BEP 15
 class UDPTrackerServer:
     """UDP BitTorrent tracker server"""
     
-    def __init__(self, host: str = "0.0.0.0", port: int = 6969, database: Database = None):
+    def __init__(self, host: str = "0.0.0.0", port: int = 6969, database: Database = None, 
+                 event_callback = None):
         """
         Initialize UDP tracker server
         
@@ -36,6 +37,7 @@ class UDPTrackerServer:
             host: Host to bind to
             port: UDP port to listen on
             database: Database instance to store events
+            event_callback: Function to call when new event is received (for WebSocket broadcast)
         """
         self.host = host
         self.port = port
@@ -43,6 +45,7 @@ class UDPTrackerServer:
         self.socket = None
         self.running = False
         self.connections = {}  # Track connection IDs
+        self.event_callback = event_callback  # Callback for broadcasting events
         
         logger.info(f"UDP Tracker initialized on {host}:{port}")
     
@@ -204,11 +207,15 @@ class UDPTrackerServer:
             event = event_map.get(event_code, "")
             
             # Create announce event
+            # Convert binary data to hex strings for database storage
+            info_hash_str = info_hash.hex()
+            peer_id_str = peer_id.hex()
+            
             announce_event = AnnounceEvent(
                 timestamp=datetime.now(),
-                info_hash=info_hash.hex(),
-                info_hash_hex=info_hash.hex(),
-                peer_id=peer_id.hex(),
+                info_hash=info_hash_str,  # Store as hex string, not bytes
+                info_hash_hex=info_hash_str,
+                peer_id=peer_id_str,
                 client_ip=addr[0],
                 client_port=port,
                 uploaded=uploaded,
@@ -253,12 +260,12 @@ class UDPTrackerServer:
             
             self.socket.sendto(response, addr)
             
-            # Broadcast to WebSocket clients if HTTP server is available
-            try:
-                from .tracker_server import broadcast_udp_event
-                broadcast_udp_event(announce_event)
-            except Exception:
-                pass  # HTTP server might not be running
+            # Call event callback if provided (for WebSocket broadcasting)
+            if self.event_callback:
+                try:
+                    self.event_callback(announce_event)
+                except Exception as e:
+                    logger.error(f"Error in event callback: {e}")
             
         except Exception as e:
             logger.error(f"Error in announce handler: {e}", exc_info=True)

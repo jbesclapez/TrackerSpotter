@@ -370,6 +370,29 @@ body {
     color: var(--event-update);
 }
 
+/* Protocol badges */
+.protocol-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 6px;
+}
+
+.protocol-badge.udp {
+    background: rgba(139, 92, 246, 0.15);
+    color: #7c3aed;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.protocol-badge.http {
+    background: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
 .torrent-hash {
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;

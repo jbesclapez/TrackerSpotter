@@ -26,24 +26,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Global SocketIO instance for UDP tracker to broadcast events
-_socketio_instance = None
-
-
-def broadcast_udp_event(event: AnnounceEvent):
-    """
-    Broadcast UDP announce event to WebSocket clients
-    Called from UDP tracker thread
-    
-    Args:
-        event: AnnounceEvent to broadcast
-    """
-    global _socketio_instance
-    if _socketio_instance:
-        try:
-            _socketio_instance.emit('new_announce', event.to_dict())
-        except Exception as e:
-            logger.error(f"Error broadcasting UDP event: {e}")
+# UDP event broadcasting is handled via callback in TrackerServer instance
 
 
 class TrackerServer:
@@ -70,25 +53,35 @@ class TrackerServer:
         
         # Initialize SocketIO for real-time updates
         # Use threading mode for PyInstaller compatibility
-        self.socketio = SocketIO(
-            self.app, 
-            cors_allowed_origins="*",
-            async_mode='threading'  # Explicitly set for PyInstaller
-        )
+        try:
+            # Try threading mode first (best for PyInstaller)
+            self.socketio = SocketIO(
+                self.app, 
+                cors_allowed_origins="*",
+                async_mode='threading',
+                logger=True,
+                engineio_logger=True
+            )
+        except ValueError:
+            # Fallback: let it auto-detect
+            self.socketio = SocketIO(
+                self.app, 
+                cors_allowed_origins="*",
+                logger=True,
+                engineio_logger=True
+            )
         
         # Initialize database
         self.db = Database()
         
         # Initialize UDP tracker (shares same database)
+        # Pass broadcast callback for real-time event updates
         self.udp_tracker = UDPTrackerServer(
             host="0.0.0.0",  # UDP needs to listen on all interfaces
             port=port,
-            database=self.db
+            database=self.db,
+            event_callback=self._broadcast_event  # Use instance method for broadcasting
         )
-        
-        # Store reference for UDP event broadcasting
-        global _socketio_instance
-        _socketio_instance = self.socketio
         
         # Setup routes
         self._setup_routes()
@@ -202,13 +195,26 @@ class TrackerServer:
                 else:
                     events = self.db.get_recent_announces(limit=limit)
                 
+                logger.info(f"Fetched {len(events)} events from database")
+                
+                # Clean up events for JSON serialization
+                clean_events = []
+                for event in events:
+                    clean_event = dict(event)
+                    # Ensure info_hash is a string, not bytes
+                    if isinstance(clean_event.get('info_hash'), bytes):
+                        clean_event['info_hash'] = clean_event['info_hash'].decode('utf-8', errors='ignore')
+                    clean_events.append(clean_event)
+                
                 return jsonify({
                     'success': True,
-                    'events': events,
-                    'count': len(events)
+                    'events': clean_events,
+                    'count': len(clean_events)
                 })
             except Exception as e:
                 logger.error(f"Error fetching events: {e}", exc_info=True)
+                import traceback
+                traceback.print_exc()
                 return jsonify({'success': False, 'error': str(e)}), 500
         
         @self.app.route('/api/torrents')
@@ -351,9 +357,13 @@ class TrackerServer:
             event: AnnounceEvent to broadcast
         """
         try:
-            self.socketio.emit('new_announce', event.to_dict())
+            event_dict = event.to_dict()
+            logger.info(f"Broadcasting event via WebSocket: {event.event_type} | {event.info_hash_hex[:8]}...")
+            logger.info(f"Event data: {event_dict}")
+            self.socketio.emit('new_announce', event_dict)
+            logger.info("WebSocket emit completed")
         except Exception as e:
-            logger.error(f"Error broadcasting event: {e}")
+            logger.error(f"Error broadcasting event: {e}", exc_info=True)
     
     def run(self):
         """Start the tracker server (HTTP and UDP)"""

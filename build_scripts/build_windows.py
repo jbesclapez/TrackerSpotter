@@ -61,6 +61,8 @@ def build_executable():
         "--hidden-import=engineio",
         "--hidden-import=bencodepy",
         "--hidden-import=simple_websocket",
+        "--hidden-import=wsproto",
+        "--hidden-import=simple_websocket.ws",
         
         # Console for debugging (remove --windowed above and uncomment this for debug builds)
         # "--console",

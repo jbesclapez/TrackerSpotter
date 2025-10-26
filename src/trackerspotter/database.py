@@ -106,7 +106,7 @@ class Database:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 event.timestamp.isoformat(),
-                event.info_hash.encode() if isinstance(event.info_hash, str) else event.info_hash,
+                event.info_hash,  # Store as hex string directly
                 event.info_hash_hex,
                 event.peer_id,
                 event.client_ip,
@@ -140,15 +140,7 @@ class Database:
                 LIMIT ?
             """, (limit,))
             
-            results = []
-            for row in cursor.fetchall():
-                event_dict = dict(row)
-                # Convert BLOB to hex string if it's bytes
-                if isinstance(event_dict.get('info_hash'), bytes):
-                    event_dict['info_hash'] = event_dict['info_hash'].hex()
-                results.append(event_dict)
-            
-            return results
+            return [dict(row) for row in cursor.fetchall()]
     
     def get_announces_by_filter(
         self,
@@ -202,16 +194,7 @@ class Database:
         
         with self.get_connection() as conn:
             cursor = conn.execute(query, params)
-            
-            results = []
-            for row in cursor.fetchall():
-                event_dict = dict(row)
-                # Convert BLOB to hex string if it's bytes
-                if isinstance(event_dict.get('info_hash'), bytes):
-                    event_dict['info_hash'] = event_dict['info_hash'].hex()
-                results.append(event_dict)
-            
-            return results
+            return [dict(row) for row in cursor.fetchall()]
     
     def get_unique_torrents(self) -> List[Dict[str, str]]:
         """
