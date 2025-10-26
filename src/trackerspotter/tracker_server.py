@@ -69,7 +69,12 @@ class TrackerServer:
         self.app.config['SECRET_KEY'] = 'trackerspotter-secret-key-change-in-production'
         
         # Initialize SocketIO for real-time updates
-        self.socketio = SocketIO(self.app, cors_allowed_origins="*")
+        # Use threading mode for PyInstaller compatibility
+        self.socketio = SocketIO(
+            self.app, 
+            cors_allowed_origins="*",
+            async_mode='threading'  # Explicitly set for PyInstaller
+        )
         
         # Initialize database
         self.db = Database()

@@ -119,25 +119,26 @@ def create_distribution_package():
     
     # Create quick start file
     quickstart_dst = dist_package / "QUICKSTART.txt"
-    with open(quickstart_dst, 'w') as f:
+    with open(quickstart_dst, 'w', encoding='utf-8') as f:
         f.write(f"""
-╔═══════════════════════════════════════════════════════════╗
-║              TrackerSpotter v{VERSION}                        ║
-║          Local BitTorrent Tracker Monitor                 ║
-╚═══════════════════════════════════════════════════════════╝
+=============================================================
+              TrackerSpotter v{VERSION}
+          Local BitTorrent Tracker Monitor
+=============================================================
 
 QUICK START:
 
 1. Double-click TrackerSpotter.exe to run
    (Your browser will open automatically)
 
-2. Copy the tracker URL shown:
-   http://127.0.0.1:6969/announce
+2. Copy a tracker URL from the dashboard:
+   HTTP: http://127.0.0.1:6969/announce
+   UDP:  udp://127.0.0.1:6969/announce (recommended)
 
 3. Add it to your torrent client's tracker list:
-   - qBittorrent: Right-click torrent → Edit trackers
-   - Transmission: Properties → Trackers → Add
-   - Deluge: Right-click → Edit Trackers
+   - qBittorrent: Right-click torrent -> Edit trackers
+   - Transmission: Properties -> Trackers -> Add
+   - Deluge: Right-click -> Edit Trackers
 
 4. Start a torrent and watch events appear!
 
@@ -174,20 +175,20 @@ def verify_dependencies():
     print("Verifying dependencies...")
     
     required_packages = [
-        "flask",
-        "flask_socketio",
-        "bencodepy",
-        "pyinstaller",
+        ("flask", "flask"),
+        ("flask_socketio", "flask_socketio"),
+        ("bencodepy", "bencodepy"),
+        ("PyInstaller", "pyinstaller"),  # Module name vs package name
     ]
     
     missing = []
-    for package in required_packages:
+    for module_name, package_name in required_packages:
         try:
-            __import__(package.replace("-", "_"))
-            print(f"   [OK] {package}")
+            __import__(module_name)
+            print(f"   [OK] {package_name}")
         except ImportError:
-            print(f"   [MISSING] {package}")
-            missing.append(package)
+            print(f"   [MISSING] {package_name}")
+            missing.append(package_name)
     
     if missing:
         print(f"\n[ERROR] Missing packages: {', '.join(missing)}")
