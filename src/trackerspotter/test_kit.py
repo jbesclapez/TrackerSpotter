@@ -94,9 +94,9 @@ class TorrentGenerator:
         Returns:
             List of paths to created .torrent files
         """
-        print(f"\n🧪 Creating Test Torrent Suite")
-        print(f"📁 Output Directory: {self.output_dir.absolute()}")
-        print(f"🎯 Tracker URL: {tracker_url}\n")
+        print(f"\nCreating Test Torrent Suite")
+        print(f"Output Directory: {self.output_dir.absolute()}")
+        print(f"Tracker URL: {tracker_url}\n")
         
         test_torrents = [
             ("test_tiny", 1024),          # 1 KB
@@ -114,10 +114,10 @@ class TorrentGenerator:
                 created_files.append(torrent_path)
                 print()
             except Exception as e:
-                print(f"❌ Failed to create {name}: {e}\n")
+                print(f"[ERROR] Failed to create {name}: {e}\n")
         
-        print(f"✅ Successfully created {len(created_files)} test torrents!")
-        print(f"\n📖 Next Steps:")
+        print(f"\n[SUCCESS] Successfully created {len(created_files)} test torrents!")
+        print(f"\nNext Steps:")
         print(f"1. Create dummy files to match the torrents:")
         
         for name, size in test_torrents:
@@ -126,6 +126,7 @@ class TorrentGenerator:
         print(f"\n2. Add the .torrent files to your torrent client")
         print(f"3. Make sure the tracker URL is set to: {tracker_url}")
         print(f"4. Start the torrents and watch TrackerSpotter!")
+        print(f"\n{'='*60}")
         
         return created_files
     
@@ -157,8 +158,8 @@ def create_dummy_files(output_dir: str = "test_torrents"):
         ("test_xlarge", 10485760),
     ]
     
-    print(f"\n📝 Creating Dummy Files")
-    print(f"📁 Output Directory: {output_path.absolute()}\n")
+    print(f"\nCreating Dummy Files")
+    print(f"Output Directory: {output_path.absolute()}\n")
     
     for name, size in test_files:
         file_path = output_path / name
@@ -168,26 +169,32 @@ def create_dummy_files(output_dir: str = "test_torrents"):
             with open(file_path, 'wb') as f:
                 f.write(b'\x00' * size)
             
-            print(f"✓ Created: {file_path} ({TorrentGenerator.format_bytes(size)})")
+            print(f"[OK] Created: {file_path} ({TorrentGenerator.format_bytes(size)})")
         except Exception as e:
-            print(f"❌ Failed to create {name}: {e}")
+            print(f"[ERROR] Failed to create {name}: {e}")
     
-    print(f"\n✅ Dummy files created successfully!")
+    print(f"\n[SUCCESS] Dummy files created successfully!")
 
 
 def main():
     """Main entry point for test kit"""
     import sys
     
+    # Try to set UTF-8 encoding
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+    
     # Default tracker URL
     default_tracker = "http://127.0.0.1:6969/announce"
     
     print("""
-╔═══════════════════════════════════════════════════════════╗
-║          TrackerSpotter Test Kit Generator                ║
-║                                                           ║
-║  This tool creates dummy .torrent files for testing      ║
-╚═══════════════════════════════════════════════════════════╝
+=============================================================
+          TrackerSpotter Test Kit Generator
+
+  This tool creates dummy .torrent files for testing
+=============================================================
 """)
     
     # Get tracker URL
@@ -208,7 +215,7 @@ def main():
         create_dummy_files()
     
     print(f"\n{'='*60}")
-    print("🎉 Test Kit Setup Complete!")
+    print("Test Kit Setup Complete!")
     print(f"{'='*60}")
     print(f"\nGenerated {len(torrents)} test torrents in: test_torrents/")
     print(f"\nTo use them:")
@@ -216,7 +223,7 @@ def main():
     print(f"2. Add the .torrent files from the test_torrents directory")
     print(f"3. Make sure TrackerSpotter is running")
     print(f"4. Start the torrents and watch events appear!")
-    print(f"\nHappy testing! 🚀\n")
+    print(f"\nHappy testing!\n")
 
 
 if __name__ == '__main__':

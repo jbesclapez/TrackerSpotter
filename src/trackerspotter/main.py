@@ -35,21 +35,30 @@ def print_banner(host: str, port: int):
         host: Server host
         port: Server port
     """
+    # Try to set UTF-8 encoding for better character support
+    import sys
+    import io
+    
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+    
     banner = f"""
-╔════════════════════════════════════════════════════════════════╗
-║                      TrackerSpotter v{__version__}                      ║
-║           Local BitTorrent Tracker Monitor                     ║
-╠════════════════════════════════════════════════════════════════╣
-║                                                                ║
-║  Status: ✓ Running                                            ║
-║  Tracker URL: http://{host}:{port}/announce{' ' * (27 - len(str(port)))}║
-║  Dashboard:   http://{host}:{port}{' ' * (35 - len(str(port)))}║
-║                                                                ║
-║  📋 Copy the tracker URL above and add it to your torrent     ║
-║     client to start monitoring announces!                     ║
-║                                                                ║
-║  Press Ctrl+C to stop                                         ║
-╚════════════════════════════════════════════════════════════════╝
+================================================================
+                  TrackerSpotter v{__version__}
+           Local BitTorrent Tracker Monitor
+================================================================
+
+  Status: Running
+  Tracker URL: http://{host}:{port}/announce
+  Dashboard:   http://{host}:{port}
+
+  Copy the tracker URL above and add it to your torrent
+  client to start monitoring announces!
+
+  Press Ctrl+C to stop
+================================================================
 """
     print(banner)
 
@@ -77,20 +86,20 @@ def main():
         # Run server (blocks)
         server.run()
     except KeyboardInterrupt:
-        print("\n\n👋 Shutting down TrackerSpotter... Goodbye!")
+        print("\n\nShutting down TrackerSpotter... Goodbye!")
         sys.exit(0)
     except OSError as e:
         if "Address already in use" in str(e):
-            print(f"\n❌ ERROR: Port {PORT} is already in use!")
+            print(f"\nERROR: Port {PORT} is already in use!")
             print(f"\nSolutions:")
             print(f"  1. Stop the other application using port {PORT}")
             print(f"  2. Or modify the PORT variable in the script")
             sys.exit(1)
         else:
-            print(f"\n❌ ERROR: Failed to start server: {e}")
+            print(f"\nERROR: Failed to start server: {e}")
             sys.exit(1)
     except Exception as e:
-        print(f"\n❌ FATAL ERROR: {e}")
+        print(f"\nFATAL ERROR: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

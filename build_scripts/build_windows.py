@@ -23,7 +23,7 @@ ICON_FILE = None  # Add path to .ico file if you have one
 
 def clean_build_directories():
     """Clean previous build artifacts"""
-    print("🧹 Cleaning build directories...")
+    print("Cleaning build directories...")
     
     for directory in [DIST_DIR, BUILD_DIR]:
         if directory.exists():
@@ -39,7 +39,7 @@ def clean_build_directories():
 
 def build_executable():
     """Build the Windows executable using PyInstaller"""
-    print(f"\n🔨 Building {APP_NAME} v{VERSION}...")
+    print(f"\nBuilding {APP_NAME} v{VERSION}...")
     
     # PyInstaller arguments
     args = [
@@ -73,17 +73,17 @@ def build_executable():
     # Run PyInstaller
     try:
         PyInstaller.__main__.run(args)
-        print(f"\n✅ Build successful!")
-        print(f"📦 Executable location: {DIST_DIR / APP_NAME}.exe")
+        print(f"\n[SUCCESS] Build successful!")
+        print(f"Executable location: {DIST_DIR / APP_NAME}.exe")
         return True
     except Exception as e:
-        print(f"\n❌ Build failed: {e}")
+        print(f"\n[ERROR] Build failed: {e}")
         return False
 
 
 def create_distribution_package():
     """Create a distribution package with README and other files"""
-    print("\n📦 Creating distribution package...")
+    print("\nCreating distribution package...")
     
     # Create distribution directory
     dist_package = DIST_DIR / f"{APP_NAME}_v{VERSION}_Windows"
@@ -94,28 +94,28 @@ def create_distribution_package():
     exe_dst = dist_package / f"{APP_NAME}.exe"
     if exe_src.exists():
         shutil.copy2(exe_src, exe_dst)
-        print(f"   ✓ Copied: {APP_NAME}.exe")
+        print(f"   [OK] Copied: {APP_NAME}.exe")
     
     # Copy README
     readme_src = PROJECT_ROOT / "README.md"
     readme_dst = dist_package / "README.md"
     if readme_src.exists():
         shutil.copy2(readme_src, readme_dst)
-        print(f"   ✓ Copied: README.md")
+        print(f"   [OK] Copied: README.md")
     
     # Copy Usage Guide
     usage_src = PROJECT_ROOT / "docs" / "USAGE_GUIDE.md"
     usage_dst = dist_package / "USAGE_GUIDE.md"
     if usage_src.exists():
         shutil.copy2(usage_src, usage_dst)
-        print(f"   ✓ Copied: USAGE_GUIDE.md")
+        print(f"   [OK] Copied: USAGE_GUIDE.md")
     
     # Copy License
     license_src = PROJECT_ROOT / "LICENSE"
     license_dst = dist_package / "LICENSE.txt"
     if license_src.exists():
         shutil.copy2(license_src, license_dst)
-        print(f"   ✓ Copied: LICENSE.txt")
+        print(f"   [OK] Copied: LICENSE.txt")
     
     # Create quick start file
     quickstart_dst = dist_package / "QUICKSTART.txt"
@@ -150,11 +150,11 @@ TROUBLESHOOTING:
 - No events? Check tracker URL is correct
 - Need help? Visit: https://github.com/jbesclapez/TrackerSpotter
 
-Made with ❤️  for the BitTorrent community
+Made with love for the BitTorrent community
 """)
-    print(f"   ✓ Created: QUICKSTART.txt")
+    print(f"   [OK] Created: QUICKSTART.txt")
     
-    print(f"\n✅ Distribution package ready: {dist_package}")
+    print(f"\n[SUCCESS] Distribution package ready: {dist_package}")
     
     # Create ZIP archive
     try:
@@ -164,14 +164,14 @@ Made with ❤️  for the BitTorrent community
             'zip',
             dist_package
         )
-        print(f"📦 ZIP archive created: {archive_path}")
+        print(f"ZIP archive created: {archive_path}")
     except Exception as e:
-        print(f"⚠️  Failed to create ZIP: {e}")
+        print(f"[WARNING] Failed to create ZIP: {e}")
 
 
 def verify_dependencies():
     """Verify all required packages are installed"""
-    print("🔍 Verifying dependencies...")
+    print("Verifying dependencies...")
     
     required_packages = [
         "flask",
@@ -184,27 +184,35 @@ def verify_dependencies():
     for package in required_packages:
         try:
             __import__(package.replace("-", "_"))
-            print(f"   ✓ {package}")
+            print(f"   [OK] {package}")
         except ImportError:
-            print(f"   ✗ {package} (MISSING)")
+            print(f"   [MISSING] {package}")
             missing.append(package)
     
     if missing:
-        print(f"\n❌ Missing packages: {', '.join(missing)}")
+        print(f"\n[ERROR] Missing packages: {', '.join(missing)}")
         print(f"Install with: pip install {' '.join(missing)}")
         return False
     
-    print("✅ All dependencies installed")
+    print("[SUCCESS] All dependencies installed")
     return True
 
 
 def main():
     """Main build process"""
+    import sys
+    
+    # Try to set UTF-8 encoding
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+    
     print("""
-╔═══════════════════════════════════════════════════════════╗
-║          TrackerSpotter Build Script                      ║
-║          Creating Windows Executable                      ║
-╚═══════════════════════════════════════════════════════════╝
+=============================================================
+          TrackerSpotter Build Script
+          Creating Windows Executable
+=============================================================
 """)
     
     # Verify dependencies
@@ -222,9 +230,9 @@ def main():
     create_distribution_package()
     
     print("""
-╔═══════════════════════════════════════════════════════════╗
-║                  🎉 BUILD COMPLETE! 🎉                    ║
-╚═══════════════════════════════════════════════════════════╝
+=============================================================
+                  BUILD COMPLETE!
+=============================================================
 
 Your executable is ready to distribute!
 
@@ -237,7 +245,7 @@ To distribute:
   - Share the ZIP file: dist/TrackerSpotter_v1.0.0_Windows.zip
   - Or share the entire folder: dist/TrackerSpotter_v1.0.0_Windows/
 
-Happy tracking! 🎯
+Happy tracking!
 """)
 
 

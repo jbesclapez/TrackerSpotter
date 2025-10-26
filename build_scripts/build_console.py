@@ -17,7 +17,7 @@ STATIC_DIR = SRC_DIR / "trackerspotter" / "static"
 
 def build_console_exe():
     """Build console version for debugging"""
-    print("🔨 Building TrackerSpotter (Console Version)...")
+    print("Building TrackerSpotter (Console Version)...")
     
     args = [
         str(PROJECT_ROOT / "trackerspotter.py"),
@@ -38,12 +38,12 @@ def build_console_exe():
     
     try:
         PyInstaller.__main__.run(args)
-        print(f"\n✅ Console build successful!")
-        print(f"📦 Executable: {DIST_DIR / 'TrackerSpotter_Console.exe'}")
-        print(f"\n💡 This version shows the console for debugging")
+        print(f"\n[SUCCESS] Console build successful!")
+        print(f"Executable: {DIST_DIR / 'TrackerSpotter_Console.exe'}")
+        print(f"\nNote: This version shows the console for debugging")
         return True
     except Exception as e:
-        print(f"\n❌ Build failed: {e}")
+        print(f"\n[ERROR] Build failed: {e}")
         return False
 
 
