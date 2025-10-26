@@ -403,10 +403,16 @@ async function clearLogs() {
     }
 }
 
-function copyTrackerUrl() {
-    const url = document.getElementById('trackerUrl').textContent;
+function copyTrackerUrl(type = 'local') {
+    let url;
+    if (type === 'docker') {
+        url = document.getElementById('trackerUrlDocker').textContent;
+    } else {
+        url = document.getElementById('trackerUrl').textContent;
+    }
+    
     navigator.clipboard.writeText(url).then(() => {
-        alert('Tracker URL copied to clipboard!');
+        alert(`${type === 'docker' ? 'Docker' : 'Local'} tracker URL copied to clipboard!`);
     }).catch(err => {
         console.error('Failed to copy:', err);
     });

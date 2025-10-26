@@ -172,7 +172,7 @@ class TrackerServer:
                     'count': len(events)
                 })
             except Exception as e:
-                logger.error(f"Error fetching events: {e}")
+                logger.error(f"Error fetching events: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)}), 500
         
         @self.app.route('/api/torrents')

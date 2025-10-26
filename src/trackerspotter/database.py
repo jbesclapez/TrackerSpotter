@@ -140,7 +140,15 @@ class Database:
                 LIMIT ?
             """, (limit,))
             
-            return [dict(row) for row in cursor.fetchall()]
+            results = []
+            for row in cursor.fetchall():
+                event_dict = dict(row)
+                # Convert BLOB to hex string if it's bytes
+                if isinstance(event_dict.get('info_hash'), bytes):
+                    event_dict['info_hash'] = event_dict['info_hash'].hex()
+                results.append(event_dict)
+            
+            return results
     
     def get_announces_by_filter(
         self,
@@ -194,7 +202,16 @@ class Database:
         
         with self.get_connection() as conn:
             cursor = conn.execute(query, params)
-            return [dict(row) for row in cursor.fetchall()]
+            
+            results = []
+            for row in cursor.fetchall():
+                event_dict = dict(row)
+                # Convert BLOB to hex string if it's bytes
+                if isinstance(event_dict.get('info_hash'), bytes):
+                    event_dict['info_hash'] = event_dict['info_hash'].hex()
+                results.append(event_dict)
+            
+            return results
     
     def get_unique_torrents(self) -> List[Dict[str, str]]:
         """
@@ -273,8 +290,8 @@ class Database:
             total = cursor.fetchone()['total']
             
             # Unique torrents
-            cursor = conn.execute("SELECT COUNT(DISTINCT info_hash_hex) as unique FROM announces")
-            unique = cursor.fetchone()['unique']
+            cursor = conn.execute("SELECT COUNT(DISTINCT info_hash_hex) as unique_torrents FROM announces")
+            unique = cursor.fetchone()['unique_torrents']
             
             # Date range
             cursor = conn.execute("""

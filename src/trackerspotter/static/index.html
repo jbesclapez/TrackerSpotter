@@ -27,8 +27,15 @@
                 <div class="banner-icon">ℹ️</div>
                 <div class="banner-text">
                     <h3>Quick Start</h3>
-                    <p><strong>1.</strong> Copy tracker URL: <code id="trackerUrl">http://127.0.0.1:6969/announce</code> 
-                       <button class="btn-copy" onclick="copyTrackerUrl()">📋 Copy</button></p>
+                    <p><strong>1.</strong> Copy tracker URL for your setup:</p>
+                    <p style="margin-left: 20px;">
+                        <strong>Local client:</strong> <code id="trackerUrl">http://127.0.0.1:6969/announce</code> 
+                        <button class="btn-copy" onclick="copyTrackerUrl('local')">Copy</button>
+                    </p>
+                    <p style="margin-left: 20px;">
+                        <strong>Docker client:</strong> <code id="trackerUrlDocker">http://host.docker.internal:6969/announce</code> 
+                        <button class="btn-copy" onclick="copyTrackerUrl('docker')">Copy</button>
+                    </p>
                     <p><strong>2.</strong> Add it to your torrent client's tracker list</p>
                     <p><strong>3.</strong> Start a torrent and watch events appear below!</p>
                 </div>
