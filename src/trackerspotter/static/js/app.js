@@ -403,16 +403,34 @@ async function clearLogs() {
     }
 }
 
-function copyTrackerUrl(type = 'local') {
+function copyTrackerUrl(type = 'http') {
     let url;
-    if (type === 'docker') {
-        url = document.getElementById('trackerUrlDocker').textContent;
-    } else {
-        url = document.getElementById('trackerUrl').textContent;
+    let label;
+    
+    switch(type) {
+        case 'http':
+            url = document.getElementById('trackerUrlHttp').textContent;
+            label = 'HTTP (local)';
+            break;
+        case 'http-docker':
+            url = document.getElementById('trackerUrlHttpDocker').textContent;
+            label = 'HTTP (Docker)';
+            break;
+        case 'udp':
+            url = document.getElementById('trackerUrlUdp').textContent;
+            label = 'UDP (local)';
+            break;
+        case 'udp-docker':
+            url = document.getElementById('trackerUrlUdpDocker').textContent;
+            label = 'UDP (Docker)';
+            break;
+        default:
+            url = document.getElementById('trackerUrlHttp').textContent;
+            label = 'HTTP';
     }
     
     navigator.clipboard.writeText(url).then(() => {
-        alert(`${type === 'docker' ? 'Docker' : 'Local'} tracker URL copied to clipboard!`);
+        alert(`${label} tracker URL copied to clipboard!`);
     }).catch(err => {
         console.error('Failed to copy:', err);
     });

@@ -17,6 +17,7 @@ from .utils import (
     create_tracker_response,
     extract_client_info
 )
+from .udp_tracker import UDPTrackerServer
 
 # Configure logging
 logging.basicConfig(
@@ -24,6 +25,25 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Global SocketIO instance for UDP tracker to broadcast events
+_socketio_instance = None
+
+
+def broadcast_udp_event(event: AnnounceEvent):
+    """
+    Broadcast UDP announce event to WebSocket clients
+    Called from UDP tracker thread
+    
+    Args:
+        event: AnnounceEvent to broadcast
+    """
+    global _socketio_instance
+    if _socketio_instance:
+        try:
+            _socketio_instance.emit('new_announce', event.to_dict())
+        except Exception as e:
+            logger.error(f"Error broadcasting UDP event: {e}")
 
 
 class TrackerServer:
@@ -53,6 +73,17 @@ class TrackerServer:
         
         # Initialize database
         self.db = Database()
+        
+        # Initialize UDP tracker (shares same database)
+        self.udp_tracker = UDPTrackerServer(
+            host="0.0.0.0",  # UDP needs to listen on all interfaces
+            port=port,
+            database=self.db
+        )
+        
+        # Store reference for UDP event broadcasting
+        global _socketio_instance
+        _socketio_instance = self.socketio
         
         # Setup routes
         self._setup_routes()
@@ -320,12 +351,22 @@ class TrackerServer:
             logger.error(f"Error broadcasting event: {e}")
     
     def run(self):
-        """Start the tracker server"""
+        """Start the tracker server (HTTP and UDP)"""
         try:
             logger.info(f"Starting TrackerSpotter on http://{self.host}:{self.port}")
-            logger.info(f"Tracker URL: http://{self.host}:{self.port}/announce")
+            logger.info(f"HTTP Tracker URL: http://{self.host}:{self.port}/announce")
+            logger.info(f"UDP Tracker URL: udp://{self.host}:{self.port}/announce")
             logger.info(f"Dashboard: http://{self.host}:{self.port}")
             
+            # Start UDP tracker in background thread
+            try:
+                self.udp_tracker.start()
+                logger.info("UDP Tracker started successfully")
+            except Exception as e:
+                logger.error(f"Failed to start UDP tracker: {e}")
+                logger.info("Continuing with HTTP tracker only...")
+            
+            # Start HTTP server (blocking)
             self.socketio.run(
                 self.app,
                 host=self.host,
@@ -343,4 +384,8 @@ class TrackerServer:
         except Exception as e:
             logger.error(f"Server error: {e}", exc_info=True)
             raise
+        finally:
+            # Stop UDP tracker on shutdown
+            if self.udp_tracker:
+                self.udp_tracker.stop()
 

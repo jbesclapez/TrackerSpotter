@@ -51,11 +51,15 @@ def print_banner(host: str, port: int):
 ================================================================
 
   Status: Running
-  Tracker URL: http://{host}:{port}/announce
-  Dashboard:   http://{host}:{port}
+  
+  HTTP Tracker: http://{host}:{port}/announce
+  UDP Tracker:  udp://{host}:{port}/announce
+  Dashboard:    http://{host}:{port}
 
-  Copy the tracker URL above and add it to your torrent
+  Copy a tracker URL above and add it to your torrent
   client to start monitoring announces!
+  
+  Tip: UDP is faster and preferred by most clients
 
   Press Ctrl+C to stop
 ================================================================

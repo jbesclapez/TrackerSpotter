@@ -81,14 +81,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- UDP tracker support (BEP 15) - Faster and more efficient than HTTP
+- Both HTTP and UDP trackers run simultaneously on same port
+- Real-time broadcasting of UDP events to dashboard via WebSocket
+- Comprehensive UDP protocol implementation (connect, announce, scrape)
+- Updated UI to show both HTTP and UDP tracker URLs
+- Docker-specific tracker URLs in Quick Start guide
+
+### Fixed
+- SQL reserved keyword issue with 'unique' in stats query
+- BLOB to JSON serialization for info_hash field
+- Events now persist correctly across page refreshes
+- 500 error when loading events from database
+
+### Changed
+- Quick Start banner now shows 4 tracker URL options (HTTP/UDP × Local/Docker)
+- Improved startup banner with both HTTP and UDP tracker URLs
+- Enhanced error logging with full tracebacks
+
 ### Planned Features
-- UDP tracker support (BEP 15)
 - Dark mode theme
 - Chart/graph visualizations
 - Session comparison
+- Torrent name/labeling
 - Cross-platform support (macOS, Linux)
 - DHT monitoring
-- Plugin system
+- Packet sniffing
 - Internationalization
 
 ---

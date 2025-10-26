@@ -12,10 +12,12 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 ## ✨ Features
 
 - 🎯 **Real-time Event Monitoring** - See announces appear instantly as they happen
+- 🚀 **HTTP & UDP Tracker Support** - Both protocols supported (UDP is faster!)
 - 📊 **Complete Progress Tracking** - Download, upload, and remaining bytes for every announce
 - 🔍 **Smart Filtering** - Filter by event type, torrent, time range, or search anything
 - 📁 **Export Capabilities** - Export session data to CSV or JSON
 - 🧪 **Test Kit Included** - Create dummy torrents for easy testing
+- 🐳 **Docker Compatible** - Works with Docker containers using host.docker.internal
 - 🖥️ **Zero Installation** - Single executable, no admin rights needed
 - 🌐 **Browser-based UI** - Clean, modern dashboard with real-time updates
 - 🔒 **Local Only** - Runs on localhost by default for security
@@ -26,12 +28,16 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 
 1. **Download** `TrackerSpotter.exe` from the [releases page](https://github.com/jbesclapez/TrackerSpotter/releases)
 2. **Double-click** to run (your browser will open automatically)
-3. **Copy the tracker URL** shown in the dashboard: `http://127.0.0.1:6969/announce`
+3. **Copy a tracker URL** from the dashboard:
+   - **UDP** (recommended): `udp://127.0.0.1:6969/announce`
+   - **HTTP**: `http://127.0.0.1:6969/announce`
 4. **Configure your torrent client**:
    - In qBittorrent: Right-click torrent → Edit trackers → Add the URL above
    - In Transmission: Edit torrent properties → Trackers → Add
    - In Deluge: Right-click torrent → Edit Trackers → Add
 5. **Start your torrent** and watch events appear in real-time! 🎉
+
+💡 **Tip:** UDP is faster and preferred by most torrent clients!
 
 ### For Developers
 
@@ -223,11 +229,13 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🗺️ Roadmap
 
-- [ ] v1.1: UDP tracker support
-- [ ] v1.2: Export to chart/graph visualizations
-- [ ] v1.3: Compare sessions feature
+- [x] v1.0: HTTP & UDP tracker support ✅
+- [ ] v1.1: Export to chart/graph visualizations
+- [ ] v1.2: Compare sessions feature
+- [ ] v1.3: Torrent name/labeling feature
 - [ ] v2.0: Cross-platform support (macOS, Linux)
 - [ ] v2.1: DHT monitoring (separate from tracker)
+- [ ] v2.2: Packet sniffing and deep inspection
 
 ---
 
