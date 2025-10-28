@@ -8,6 +8,8 @@ from flask_socketio import SocketIO, emit
 from datetime import datetime
 from typing import Optional
 import logging
+import sys
+from pathlib import Path
 
 from .models import AnnounceEvent
 from .database import Database
@@ -45,9 +47,18 @@ class TrackerServer:
         self.port = port
         self.debug = debug
         
-        # Initialize Flask app
+        # Determine static folder path based on execution mode
+        if getattr(sys, 'frozen', False):
+            # Running as PyInstaller executable
+            # PyInstaller extracts to sys._MEIPASS
+            base_path = Path(sys._MEIPASS) / 'trackerspotter' / 'static'
+        else:
+            # Running from source
+            base_path = Path(__file__).parent / 'static'
+        
+        # Initialize Flask app with correct static folder path
         self.app = Flask(__name__, 
-                        static_folder='static',
+                        static_folder=str(base_path),
                         static_url_path='/static')
         self.app.config['SECRET_KEY'] = 'trackerspotter-secret-key-change-in-production'
         
