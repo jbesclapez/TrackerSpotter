@@ -13,10 +13,47 @@ let currentFilters = {
 // Initialize application
 document.addEventListener('DOMContentLoaded', () => {
     console.log('TrackerSpotter initializing...');
+    updateTrackerUrls(); // Update URLs based on actual port
     initializeWebSocket();
     loadInitialData();
     setupEventListeners();
 });
+
+// Update tracker URLs dynamically based on current port
+function updateTrackerUrls() {
+    const port = window.location.port || '6969'; // Get actual port from browser
+    const host = window.location.hostname || '127.0.0.1';
+    
+    // Update HTTP tracker URL
+    const httpUrl = `http://${host}:${port}/announce`;
+    const httpElement = document.getElementById('trackerUrlHttp');
+    if (httpElement) {
+        httpElement.textContent = httpUrl;
+    }
+    
+    // Update HTTP Docker URL
+    const httpDockerUrl = `http://host.docker.internal:${port}/announce`;
+    const httpDockerElement = document.getElementById('trackerUrlHttpDocker');
+    if (httpDockerElement) {
+        httpDockerElement.textContent = httpDockerUrl;
+    }
+    
+    // Update UDP tracker URL
+    const udpUrl = `udp://${host}:${port}/announce`;
+    const udpElement = document.getElementById('trackerUrlUdp');
+    if (udpElement) {
+        udpElement.textContent = udpUrl;
+    }
+    
+    // Update UDP Docker URL
+    const udpDockerUrl = `udp://host.docker.internal:${port}/announce`;
+    const udpDockerElement = document.getElementById('trackerUrlUdpDocker');
+    if (udpDockerElement) {
+        udpDockerElement.textContent = udpDockerUrl;
+    }
+    
+    console.log(`Tracker URLs updated for port ${port}`);
+}
 
 // WebSocket connection
 function initializeWebSocket() {

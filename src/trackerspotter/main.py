@@ -6,6 +6,7 @@ import sys
 import webbrowser
 import threading
 import time
+import socket
 from pathlib import Path
 
 from . import __version__
@@ -25,6 +26,35 @@ def open_browser(url: str, delay: float = 1.5):
         webbrowser.open(url)
     except Exception:
         pass  # Silently fail if browser can't be opened
+
+
+def find_available_port(start_port: int = 6969, max_attempts: int = 10) -> int:
+    """
+    Find an available port starting from start_port
+    
+    Args:
+        start_port: Preferred port to start searching from
+        max_attempts: Maximum number of ports to try
+        
+    Returns:
+        Available port number
+        
+    Raises:
+        OSError: If no available port found in range
+    """
+    for offset in range(max_attempts):
+        port = start_port + offset
+        try:
+            # Test if port is available by attempting to bind
+            test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            test_socket.bind(('127.0.0.1', port))
+            test_socket.close()
+            return port
+        except OSError:
+            continue
+    
+    raise OSError(f"No available ports found in range {start_port}-{start_port + max_attempts - 1}")
 
 
 def print_banner(host: str, port: int):
@@ -72,10 +102,21 @@ def main():
     
     # Configuration (could be loaded from config file in future)
     HOST = "127.0.0.1"  # Localhost only by default for security
-    PORT = 6969  # Common BitTorrent tracker port
     DEBUG = False
     
-    # Print banner
+    # Find available port (tries 6969 first, then 6970, 6971, etc.)
+    try:
+        PORT = find_available_port(6969)
+        if PORT != 6969:
+            print(f"\n⚠️  Port 6969 is busy, using port {PORT} instead")
+            print(f"   Check the dashboard for the correct tracker URL!\n")
+    except OSError as e:
+        print(f"\n❌ ERROR: Could not find an available port")
+        print(f"   {e}")
+        print(f"\n   Try closing other applications and restart TrackerSpotter.\n")
+        sys.exit(1)
+    
+    # Print banner with actual port
     print_banner(HOST, PORT)
     
     # Start server in main thread
@@ -94,13 +135,13 @@ def main():
         sys.exit(0)
     except OSError as e:
         if "Address already in use" in str(e):
-            print(f"\nERROR: Port {PORT} is already in use!")
-            print(f"\nSolutions:")
-            print(f"  1. Stop the other application using port {PORT}")
-            print(f"  2. Or modify the PORT variable in the script")
+            # This should rarely happen now due to auto port detection
+            print(f"\n❌ ERROR: Port {PORT} is already in use!")
+            print(f"\n   This is unexpected - the port was available moments ago.")
+            print(f"   Another application may have grabbed it. Please restart TrackerSpotter.\n")
             sys.exit(1)
         else:
-            print(f"\nERROR: Failed to start server: {e}")
+            print(f"\n❌ ERROR: Failed to start server: {e}\n")
             sys.exit(1)
     except Exception as e:
         print(f"\nFATAL ERROR: {e}")
