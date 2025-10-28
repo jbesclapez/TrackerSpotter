@@ -64,7 +64,6 @@ class TrackerServer:
         
         # Initialize SocketIO for real-time updates
         # Use simple polling mode for maximum PyInstaller compatibility
-        import sys
         if getattr(sys, 'frozen', False):
             # Running in PyInstaller bundle - use polling only
             async_mode_setting = None  # Let it auto-detect
