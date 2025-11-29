@@ -19,40 +19,85 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
-// Update tracker URLs dynamically based on current port
-function updateTrackerUrls() {
-    const port = window.location.port || '6969'; // Get actual port from browser
-    const host = window.location.hostname || '127.0.0.1';
-    
-    // Update HTTP tracker URL
-    const httpUrl = `http://${host}:${port}/announce`;
-    const httpElement = document.getElementById('trackerUrlHttp');
-    if (httpElement) {
-        httpElement.textContent = httpUrl;
+// Update tracker URLs dynamically based on server config
+async function updateTrackerUrls() {
+    try {
+        const response = await fetch('/api/config');
+        const data = await response.json();
+        
+        if (data.success) {
+            const host = data.display_host;
+            const port = data.port;
+            
+            // Update HTTP tracker URL
+            const httpUrl = `http://${host}:${port}/announce`;
+            const httpElement = document.getElementById('trackerUrlHttp');
+            if (httpElement) {
+                httpElement.textContent = httpUrl;
+            }
+            
+            // Update HTTP Docker URL
+            const httpDockerUrl = `http://host.docker.internal:${port}/announce`;
+            const httpDockerElement = document.getElementById('trackerUrlHttpDocker');
+            if (httpDockerElement) {
+                httpDockerElement.textContent = httpDockerUrl;
+            }
+            
+            // Update UDP tracker URL
+            const udpUrl = `udp://${host}:${port}/announce`;
+            const udpElement = document.getElementById('trackerUrlUdp');
+            if (udpElement) {
+                udpElement.textContent = udpUrl;
+            }
+            
+            // Update UDP Docker URL
+            const udpDockerUrl = `udp://host.docker.internal:${port}/announce`;
+            const udpDockerElement = document.getElementById('trackerUrlUdpDocker');
+            if (udpDockerElement) {
+                udpDockerElement.textContent = udpDockerUrl;
+            }
+            
+            // Handle IPv6 URLs if enabled
+            const ipv6Section = document.getElementById('ipv6UrlsSection');
+            if (data.ipv6_enabled && data.http_url_ipv6) {
+                // Show IPv6 section
+                if (ipv6Section) {
+                    ipv6Section.style.display = 'block';
+                }
+                
+                // Update IPv6 URLs
+                const httpIpv6Element = document.getElementById('trackerUrlHttpIpv6');
+                if (httpIpv6Element) {
+                    httpIpv6Element.textContent = data.http_url_ipv6;
+                }
+                
+                const udpIpv6Element = document.getElementById('trackerUrlUdpIpv6');
+                if (udpIpv6Element) {
+                    udpIpv6Element.textContent = data.udp_url_ipv6;
+                }
+            } else if (ipv6Section) {
+                ipv6Section.style.display = 'none';
+            }
+            
+            // Show warning if bound to non-localhost
+            if (!data.is_localhost) {
+                console.log(`TrackerSpotter is exposed on ${data.host}:${port}`);
+            }
+            
+            console.log(`Tracker URLs updated for ${host}:${port}`);
+        }
+    } catch (error) {
+        // Fallback to window.location if API fails
+        const port = window.location.port || '6969';
+        const host = window.location.hostname || '127.0.0.1';
+        
+        document.getElementById('trackerUrlHttp').textContent = `http://${host}:${port}/announce`;
+        document.getElementById('trackerUrlHttpDocker').textContent = `http://host.docker.internal:${port}/announce`;
+        document.getElementById('trackerUrlUdp').textContent = `udp://${host}:${port}/announce`;
+        document.getElementById('trackerUrlUdpDocker').textContent = `udp://host.docker.internal:${port}/announce`;
+        
+        console.log('Tracker URLs updated from window.location (fallback)');
     }
-    
-    // Update HTTP Docker URL
-    const httpDockerUrl = `http://host.docker.internal:${port}/announce`;
-    const httpDockerElement = document.getElementById('trackerUrlHttpDocker');
-    if (httpDockerElement) {
-        httpDockerElement.textContent = httpDockerUrl;
-    }
-    
-    // Update UDP tracker URL
-    const udpUrl = `udp://${host}:${port}/announce`;
-    const udpElement = document.getElementById('trackerUrlUdp');
-    if (udpElement) {
-        udpElement.textContent = udpUrl;
-    }
-    
-    // Update UDP Docker URL
-    const udpDockerUrl = `udp://host.docker.internal:${port}/announce`;
-    const udpDockerElement = document.getElementById('trackerUrlUdpDocker');
-    if (udpDockerElement) {
-        udpDockerElement.textContent = udpDockerUrl;
-    }
-    
-    console.log(`Tracker URLs updated for port ${port}`);
 }
 
 // WebSocket connection
@@ -80,6 +125,7 @@ function initializeWebSocket() {
         filteredEvents = [];
         renderEvents();
         loadStats();
+        loadTorrents();  // Reset torrent filter dropdown counts
     });
 }
 
@@ -401,7 +447,14 @@ function showEventDetails(eventId) {
         <div class="detail-section">
             <h4>Raw Query String</h4>
             <div class="detail-field">
-                <div class="detail-value" style="word-break: break-all; font-size: 0.8rem;">${event.raw_query || 'Not available'}</div>
+                <div class="detail-value raw-data">${escapeHtml(event.raw_query) || 'Not available'}</div>
+            </div>
+        </div>
+        
+        <div class="detail-section">
+            <h4>Raw HTTP Headers</h4>
+            <div class="detail-field">
+                <pre class="detail-value raw-data">${escapeHtml(event.raw_headers) || 'Not available (UDP)'}</pre>
             </div>
         </div>
     `;
@@ -481,6 +534,14 @@ function copyTrackerUrl(type = 'http') {
             url = document.getElementById('trackerUrlUdpDocker').textContent;
             label = 'UDP (Docker)';
             break;
+        case 'http-ipv6':
+            url = document.getElementById('trackerUrlHttpIpv6').textContent;
+            label = 'HTTP (IPv6)';
+            break;
+        case 'udp-ipv6':
+            url = document.getElementById('trackerUrlUdpIpv6').textContent;
+            label = 'UDP (IPv6)';
+            break;
         default:
             url = document.getElementById('trackerUrlHttp').textContent;
             label = 'HTTP';
@@ -498,6 +559,13 @@ function closeBanner() {
 }
 
 // Utility functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';
     const k = 1024;

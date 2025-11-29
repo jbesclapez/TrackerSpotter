@@ -34,7 +34,8 @@ logger = logging.getLogger(__name__)
 class TrackerServer:
     """BitTorrent tracker server with web UI"""
     
-    def __init__(self, host: str = "127.0.0.1", port: int = 6969, debug: bool = False):
+    def __init__(self, host: str = "127.0.0.1", port: int = 6969, debug: bool = False, 
+                 enable_ipv6: bool = False):
         """
         Initialize tracker server
         
@@ -42,10 +43,12 @@ class TrackerServer:
             host: Host to bind to (default: localhost only)
             port: Port to listen on
             debug: Enable debug mode
+            enable_ipv6: Also bind to IPv6 (::1)
         """
         self.host = host
         self.port = port
         self.debug = debug
+        self.enable_ipv6 = enable_ipv6
         
         # Determine static folder path based on execution mode
         if getattr(sys, 'frozen', False):
@@ -63,24 +66,12 @@ class TrackerServer:
         self.app.config['SECRET_KEY'] = 'trackerspotter-secret-key-change-in-production'
         
         # Initialize SocketIO for real-time updates
-        # Use simple polling mode for maximum PyInstaller compatibility
-        if getattr(sys, 'frozen', False):
-            # Running in PyInstaller bundle - use polling only
-            async_mode_setting = None  # Let it auto-detect
-            allowed_upgrades = []  # Disable WebSocket upgrade
-        else:
-            # Running from source - use normal mode
-            async_mode_setting = None
-            allowed_upgrades = ['websocket']
-        
+        # Simple configuration for maximum compatibility
         self.socketio = SocketIO(
             self.app, 
             cors_allowed_origins="*",
             logger=False,
-            engineio_logger=False,
-            async_mode=async_mode_setting,
-            # For PyInstaller, disable WebSocket and use polling only
-            engineio_options={'transports': ['polling']} if getattr(sys, 'frozen', False) else {}
+            engineio_logger=False
         )
         
         # Initialize database
@@ -89,11 +80,26 @@ class TrackerServer:
         # Initialize UDP tracker (shares same database)
         # Pass broadcast callback for real-time event updates
         self.udp_tracker = UDPTrackerServer(
-            host="0.0.0.0",  # UDP needs to listen on all interfaces
+            host=host,  # Use same host as HTTP tracker (127.0.0.1 by default)
             port=port,
             database=self.db,
-            event_callback=self._broadcast_event  # Use instance method for broadcasting
+            event_callback=self._broadcast_event,  # Use instance method for broadcasting
+            enable_ipv6=enable_ipv6
         )
+        
+        # IPv6 UDP tracker (optional)
+        self.udp_tracker_ipv6 = None
+        if enable_ipv6:
+            ipv6_host = '::1' if host == '127.0.0.1' else '::' if host == '0.0.0.0' else None
+            if ipv6_host:
+                self.udp_tracker_ipv6 = UDPTrackerServer(
+                    host=ipv6_host,
+                    port=port,
+                    database=self.db,
+                    event_callback=self._broadcast_event,
+                    enable_ipv6=True,
+                    is_ipv6=True
+                )
         
         # Setup routes
         self._setup_routes()
@@ -107,6 +113,93 @@ class TrackerServer:
         def index():
             """Serve main dashboard"""
             return send_from_directory(self.app.static_folder, 'index.html')
+        
+        @self.app.route('/scrape')
+        def scrape():
+            """
+            Handle BitTorrent tracker scrape requests
+            Scrape returns stats about specified torrents
+            """
+            try:
+                # Parse info_hash(es) - can be multiple
+                info_hashes = request.args.getlist('info_hash')
+                
+                # Capture raw HTTP headers
+                raw_headers_lines = []
+                for header_name, header_value in request.headers:
+                    raw_headers_lines.append(f"{header_name}: {header_value}")
+                raw_headers = "\r\n".join(raw_headers_lines)
+                
+                # Get client info
+                client_ip = request.remote_addr
+                user_agent = request.headers.get('User-Agent', '')
+                
+                # Process each info_hash and log as scrape event
+                scraped_hashes = []
+                for info_hash_raw in info_hashes:
+                    try:
+                        info_hash_raw_bytes, info_hash_hex = parse_info_hash(info_hash_raw)
+                        if info_hash_hex:
+                            scraped_hashes.append(info_hash_hex)
+                            
+                            # Create scrape event
+                            scrape_event = AnnounceEvent(
+                                timestamp=datetime.now(),
+                                info_hash=info_hash_raw_bytes.hex() if info_hash_raw_bytes else info_hash_hex,
+                                info_hash_hex=info_hash_hex,
+                                peer_id="",  # Scrape doesn't have peer_id
+                                client_ip=client_ip,
+                                client_port=0,
+                                uploaded=0,
+                                downloaded=0,
+                                left=0,
+                                event="scrape",  # Special event type for scrape
+                                user_agent=user_agent,
+                                numwant=0,
+                                compact=0,
+                                key="",
+                                raw_query=request.query_string.decode('utf-8', errors='ignore'),
+                                raw_headers=raw_headers
+                            )
+                            
+                            # Store in database
+                            event_id = self.db.insert_announce(scrape_event)
+                            scrape_event.id = event_id
+                            
+                            # Broadcast to connected web clients
+                            self._broadcast_event(scrape_event)
+                    except Exception:
+                        continue
+                
+                # Log the scrape
+                hash_count = len(scraped_hashes)
+                logger.info(
+                    f"Scrape received: {hash_count} hash(es) | "
+                    f"Client: {client_ip} | "
+                    f"Hashes: {', '.join(h[:8] + '...' for h in scraped_hashes[:3])}"
+                    f"{'...' if hash_count > 3 else ''}"
+                )
+                
+                # Return minimal valid scrape response (we're just monitoring)
+                from .utils import bencode
+                
+                files = {}
+                for info_hash_hex in scraped_hashes:
+                    # Convert hex back to bytes for the response key
+                    files[bytes.fromhex(info_hash_hex)] = {
+                        b'complete': 0,    # Seeders
+                        b'incomplete': 0,  # Leechers
+                        b'downloaded': 0   # Times completed
+                    }
+                
+                response_dict = {b'files': files}
+                return Response(bencode(response_dict), mimetype='text/plain')
+                
+            except Exception as e:
+                logger.error(f"Error processing scrape: {e}", exc_info=True)
+                from .utils import bencode
+                error_dict = {b'failure reason': b'Internal server error'}
+                return Response(bencode(error_dict), mimetype='text/plain')
         
         @self.app.route('/announce')
         def announce():
@@ -136,6 +229,13 @@ class TrackerServer:
                 client_ip = request.remote_addr
                 user_agent = request.headers.get('User-Agent', '')
                 
+                # Capture raw HTTP headers as-is (important for client file making)
+                # Format: "Header-Name: value\r\n" for each header
+                raw_headers_lines = []
+                for header_name, header_value in request.headers:
+                    raw_headers_lines.append(f"{header_name}: {header_value}")
+                raw_headers = "\r\n".join(raw_headers_lines)
+                
                 # Create announce event
                 announce_event = AnnounceEvent(
                     timestamp=datetime.now(),
@@ -152,7 +252,8 @@ class TrackerServer:
                     numwant=numwant,
                     compact=compact,
                     key=key,
-                    raw_query=request.query_string.decode('utf-8', errors='ignore')
+                    raw_query=request.query_string.decode('utf-8', errors='ignore'),
+                    raw_headers=raw_headers
                 )
                 
                 # Store in database
@@ -254,6 +355,33 @@ class TrackerServer:
                 logger.error(f"Error fetching stats: {e}")
                 return jsonify({'success': False, 'error': str(e)}), 500
         
+        @self.app.route('/api/config')
+        def get_config():
+            """Get server configuration for UI"""
+            # Determine display host (use 127.0.0.1 if bound to all interfaces)
+            display_host = '127.0.0.1' if self.host == '0.0.0.0' else self.host
+            
+            config = {
+                'success': True,
+                'host': self.host,
+                'display_host': display_host,
+                'port': self.port,
+                'http_url': f"http://{display_host}:{self.port}/announce",
+                'udp_url': f"udp://{display_host}:{self.port}/announce",
+                'is_localhost': self.host in ('127.0.0.1', 'localhost', '::1'),
+                'ipv6_enabled': self.enable_ipv6
+            }
+            
+            # Add IPv6 URLs if enabled
+            if self.enable_ipv6:
+                ipv6_host = '::1' if self.host in ('127.0.0.1', 'localhost') else '::' if self.host == '0.0.0.0' else None
+                if ipv6_host:
+                    config['ipv6_host'] = ipv6_host
+                    config['http_url_ipv6'] = f"http://[{ipv6_host}]:{self.port}/announce"
+                    config['udp_url_ipv6'] = f"udp://[{ipv6_host}]:{self.port}/announce"
+            
+            return jsonify(config)
+        
         @self.app.route('/api/clear', methods=['POST'])
         def clear_logs():
             """Clear all announce logs"""
@@ -280,10 +408,13 @@ class TrackerServer:
                 
                 # Generate CSV
                 csv_lines = [
-                    'timestamp,event,info_hash,client_ip,client_port,downloaded,uploaded,left,user_agent'
+                    'timestamp,event,info_hash,client_ip,client_port,downloaded,uploaded,left,user_agent,raw_query'
                 ]
                 
                 for event in events:
+                    # Escape quotes in raw_query for CSV
+                    raw_query = event.get('raw_query', '') or ''
+                    raw_query_escaped = raw_query.replace('"', '""')
                     csv_lines.append(
                         f"{event['timestamp']},"
                         f"{event['event'] if event['event'] else 'update'},"
@@ -293,7 +424,8 @@ class TrackerServer:
                         f"{event['downloaded']},"
                         f"{event['uploaded']},"
                         f"{event['left']},"
-                        f"\"{event['user_agent']}\""
+                        f"\"{event['user_agent']}\","
+                        f"\"{raw_query_escaped}\""
                     )
                 
                 csv_data = '\n'.join(csv_lines)
@@ -377,13 +509,25 @@ class TrackerServer:
             logger.info(f"UDP Tracker URL: udp://{self.host}:{self.port}/announce")
             logger.info(f"Dashboard: http://{self.host}:{self.port}")
             
+            if self.enable_ipv6:
+                ipv6_host = '::1' if self.host == '127.0.0.1' else '::' if self.host == '0.0.0.0' else self.host
+                logger.info(f"IPv6 Tracker URL: http://[{ipv6_host}]:{self.port}/announce")
+            
             # Start UDP tracker in background thread
             try:
                 self.udp_tracker.start()
-                logger.info("UDP Tracker started successfully")
+                logger.info("UDP Tracker (IPv4) started successfully")
             except Exception as e:
                 logger.error(f"Failed to start UDP tracker: {e}")
                 logger.info("Continuing with HTTP tracker only...")
+            
+            # Start IPv6 UDP tracker if enabled
+            if self.udp_tracker_ipv6:
+                try:
+                    self.udp_tracker_ipv6.start()
+                    logger.info("UDP Tracker (IPv6) started successfully")
+                except Exception as e:
+                    logger.error(f"Failed to start IPv6 UDP tracker: {e}")
             
             # Start HTTP server (blocking)
             self.socketio.run(
@@ -404,7 +548,9 @@ class TrackerServer:
             logger.error(f"Server error: {e}", exc_info=True)
             raise
         finally:
-            # Stop UDP tracker on shutdown
+            # Stop UDP trackers on shutdown
             if self.udp_tracker:
                 self.udp_tracker.stop()
+            if self.udp_tracker_ipv6:
+                self.udp_tracker_ipv6.stop()
 

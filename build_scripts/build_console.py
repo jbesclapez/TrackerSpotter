@@ -28,12 +28,25 @@ def build_console_exe():
         f"--distpath={DIST_DIR}",
         f"--workpath={BUILD_DIR}",
         f"--add-data={STATIC_DIR}{os.pathsep}trackerspotter/static",
+        
+        # Core dependencies
         "--hidden-import=flask",
+        "--hidden-import=bencodepy",
+        
+        # Flask-SocketIO and dependencies
         "--hidden-import=flask_socketio",
         "--hidden-import=socketio",
+        "--hidden-import=socketio.server",
         "--hidden-import=engineio",
-        "--hidden-import=bencodepy",
+        "--hidden-import=engineio.server",
+        "--hidden-import=engineio.async_drivers.threading",
+        
+        # WebSocket support
         "--hidden-import=simple_websocket",
+        "--hidden-import=wsproto",
+        "--hidden-import=wsproto.connection",
+        "--hidden-import=wsproto.events",
+        "--hidden-import=h11",
     ]
     
     try:

@@ -370,6 +370,11 @@ body {
     color: var(--event-update);
 }
 
+.event-badge.scrape {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
 /* Protocol badges */
 .protocol-badge {
     display: inline-block;
@@ -514,6 +519,21 @@ body {
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     word-break: break-all;
+}
+
+.detail-value.raw-data {
+    background: var(--bg-color);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+pre.detail-value {
+    margin: 0;
 }
 
 /* Footer */

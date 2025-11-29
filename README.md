@@ -21,6 +21,9 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 - 🖥️ **Zero Installation** - Single executable, no admin rights needed
 - 🌐 **Browser-based UI** - Clean, modern dashboard with real-time updates
 - 🔒 **Local Only** - Runs on localhost by default for security
+- 🌐 **IPv6 Support** - Optional IPv6 binding with `--ipv6` flag
+- 📡 **Scrape Support** - Logs tracker scrape requests
+- 🔌 **Offline Mode** - Works without internet connection
 
 ## 🚀 Quick Start
 
@@ -107,21 +110,46 @@ Browser will open to `http://localhost:6969`
 
 ## 🔧 Configuration
 
-Access settings via the **⚙️ Settings** button in the UI:
+TrackerSpotter can be configured via command-line arguments:
 
-- **Port**: Change listening port (default: 6969)
-- **Log Retention**: Set max days or file size for logs
-- **Verbose Mode**: Show additional technical details
-- **Auto-open Browser**: Enable/disable browser launch on startup
+```bash
+# Default: localhost only on port 6969
+trackerspotter
 
-## 🧪 Test Kit
+# Change port
+trackerspotter --port 8080
 
-Create dummy torrents for testing:
+# Expose to LAN (requires firewall configuration)
+trackerspotter --host 0.0.0.0
 
-1. Click **🧪 Test Kit** in the dashboard
-2. Follow the guided steps to generate 5 test torrents
-3. Includes tiny files (1KB each) for quick testing
-4. Pre-configured to use your TrackerSpotter URL
+# Bind to specific interface
+trackerspotter --host 192.168.1.5
+
+# Enable IPv6 support
+trackerspotter --ipv6
+
+# Don't auto-open browser
+trackerspotter --no-browser
+
+# See all options
+trackerspotter --help
+```
+
+**Note:** When binding to non-localhost addresses, make sure to configure your firewall appropriately.
+
+## 🧪 Test Kit (CLI)
+
+Generate dummy torrents for testing via command line:
+
+```bash
+# Run the test kit generator
+python -m trackerspotter.test_kit
+
+# Or specify tracker URL directly
+python -m trackerspotter.test_kit http://127.0.0.1:6969/announce
+```
+
+This creates 5 test torrents of varying sizes (1KB to 10MB) in a `test_torrents/` directory.
 
 ## 📋 What Gets Captured
 
@@ -135,6 +163,7 @@ For every announce, TrackerSpotter records:
 | **Client Info** | IP address, port, peer ID, user agent |
 | **Progress** | Uploaded, downloaded, and remaining bytes |
 | **All Parameters** | Complete query string for debugging |
+| **Raw HTTP Headers** | Complete HTTP headers as sent by client |
 
 ## 🎯 Common Use Cases
 
@@ -157,6 +186,19 @@ Tested and confirmed working with:
 - ✅ Tixati
 
 *Any client that supports HTTP tracker announces will work!*
+
+## 💻 Compatibility Notes
+
+### Windows 7 (Unsupported but Possible)
+
+While Python 3.9+ doesn't officially support Windows 7, TrackerSpotter can run under Windows 7 using [VxKex](https://github.com/vxiiduu/VxKex) with these settings:
+
+- **Enable VxKex for this program:** Yes
+- **Report a different version of Windows:** Windows 10
+- **Use stronger version reporting:** Yes
+- **Disable VxKex for child processes:** Yes (important!)
+
+*Note: This configuration is community-tested but not officially supported.*
 
 ## 🛠️ Building from Source
 
@@ -191,26 +233,35 @@ pytest tests/ -v --cov=src
 ### No Events Appearing
 
 **Checklist**:
-1. ✓ Is TrackerSpotter running? (check system tray)
+1. ✓ Is TrackerSpotter running? (check system tray icon)
 2. ✓ Did you copy the correct URL? (`http://127.0.0.1:6969/announce`)
 3. ✓ Is the torrent started/active in your client?
 4. ✓ Does your client allow custom trackers?
 
 ### Browser Doesn't Open
 
-- Manually navigate to `http://localhost:6969`
+- Use `--no-browser` flag and manually navigate to `http://127.0.0.1:6969`
+- Check the system tray icon - right-click and select "Open Dashboard"
 - Check Windows Firewall isn't blocking local connections
+
+### Firewall Prompt on Startup
+
+If you see a Windows Firewall prompt, it's likely because:
+- UDP tracker is binding (this is needed for UDP announce support)
+- You're using `--host 0.0.0.0` to expose to LAN
+
+For localhost-only use, you can safely deny the firewall request.
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 **Areas we'd love help with**:
-- UDP tracker support
 - Additional torrent client guides
 - UI/UX improvements
 - Cross-platform support (macOS, Linux)
 - Internationalization
+- Performance optimizations
 
 ## 📜 License
 
@@ -230,9 +281,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## 🗺️ Roadmap
 
 - [x] v1.0: HTTP & UDP tracker support ✅
-- [ ] v1.1: Export to chart/graph visualizations
-- [ ] v1.2: Compare sessions feature
-- [ ] v1.3: Torrent name/labeling feature
+- [x] v1.1: Scrape support, IPv6, configurable binding ✅
+- [ ] v1.2: Export to chart/graph visualizations
+- [ ] v1.3: Compare sessions feature
+- [ ] v1.4: Torrent name/labeling feature
 - [ ] v2.0: Cross-platform support (macOS, Linux)
 - [ ] v2.1: DHT monitoring (separate from tracker)
 - [ ] v2.2: Packet sniffing and deep inspection

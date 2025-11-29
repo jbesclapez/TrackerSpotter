@@ -29,7 +29,7 @@ class UDPTrackerServer:
     """UDP BitTorrent tracker server"""
     
     def __init__(self, host: str = "0.0.0.0", port: int = 6969, database: Database = None, 
-                 event_callback = None):
+                 event_callback = None, enable_ipv6: bool = False, is_ipv6: bool = False):
         """
         Initialize UDP tracker server
         
@@ -38,6 +38,8 @@ class UDPTrackerServer:
             port: UDP port to listen on
             database: Database instance to store events
             event_callback: Function to call when new event is received (for WebSocket broadcast)
+            enable_ipv6: Whether IPv6 is enabled globally
+            is_ipv6: Whether this specific instance is an IPv6 socket
         """
         self.host = host
         self.port = port
@@ -46,26 +48,41 @@ class UDPTrackerServer:
         self.running = False
         self.connections = {}  # Track connection IDs
         self.event_callback = event_callback  # Callback for broadcasting events
+        self.is_ipv6 = is_ipv6
         
-        logger.info(f"UDP Tracker initialized on {host}:{port}")
+        protocol = "IPv6" if is_ipv6 else "IPv4"
+        logger.info(f"UDP Tracker ({protocol}) initialized on {host}:{port}")
     
     def start(self):
         """Start the UDP tracker server"""
         try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # Use IPv6 or IPv4 socket based on configuration
+            if self.is_ipv6:
+                self.socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+            else:
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.bind((self.host, self.port))
             self.running = True
             
-            logger.info(f"UDP Tracker listening on {self.host}:{self.port}")
-            logger.info(f"UDP Tracker URL: udp://{self.host}:{self.port}/announce")
+            # Format URL appropriately for IPv6
+            if self.is_ipv6:
+                url_host = f"[{self.host}]"
+            else:
+                url_host = self.host
+            
+            protocol = "IPv6" if self.is_ipv6 else "IPv4"
+            logger.info(f"UDP Tracker ({protocol}) listening on {self.host}:{self.port}")
+            logger.info(f"UDP Tracker URL: udp://{url_host}:{self.port}/announce")
             
             # Start listening thread
             listen_thread = threading.Thread(target=self._listen_loop, daemon=True)
             listen_thread.start()
             
         except Exception as e:
-            logger.error(f"Failed to start UDP tracker: {e}")
+            protocol = "IPv6" if self.is_ipv6 else "IPv4"
+            logger.error(f"Failed to start UDP tracker ({protocol}): {e}")
             raise
     
     def stop(self):
@@ -289,18 +306,64 @@ class UDPTrackerServer:
                 self._send_error(addr, transaction_id, "Invalid connection ID")
                 return
             
-            # Return minimal scrape response (we're just monitoring, not tracking peers)
+            # Parse and log each info_hash
+            num_hashes = (len(data) - 16) // 20
+            scraped_hashes = []
+            
+            for i in range(num_hashes):
+                offset = 16 + (i * 20)
+                info_hash = data[offset:offset + 20]
+                info_hash_hex = info_hash.hex()
+                scraped_hashes.append(info_hash_hex)
+                
+                # Create scrape event
+                scrape_event = AnnounceEvent(
+                    timestamp=datetime.now(),
+                    info_hash=info_hash_hex,
+                    info_hash_hex=info_hash_hex,
+                    peer_id="",
+                    client_ip=addr[0],
+                    client_port=addr[1],
+                    uploaded=0,
+                    downloaded=0,
+                    left=0,
+                    event="scrape",  # Special event type for scrape
+                    user_agent="UDP",
+                    numwant=0,
+                    compact=1,
+                    key="",
+                    raw_query=f"UDP scrape from {addr[0]}:{addr[1]}"
+                )
+                
+                # Store in database
+                event_id = self.db.insert_announce(scrape_event)
+                scrape_event.id = event_id
+                
+                # Broadcast event if callback provided
+                if self.event_callback:
+                    try:
+                        self.event_callback(scrape_event)
+                    except Exception as e:
+                        logger.error(f"Error in scrape event callback: {e}")
+            
+            # Log the scrape
+            logger.info(
+                f"UDP Scrape: {num_hashes} hash(es) | "
+                f"Client: {addr[0]}:{addr[1]} | "
+                f"Hashes: {', '.join(h[:8] + '...' for h in scraped_hashes[:3])}"
+                f"{'...' if num_hashes > 3 else ''}"
+            )
+            
+            # Return minimal scrape response
             # Format: action (2) | transaction_id | (seeders | completed | leechers) per hash
             response = struct.pack(">II", SCRAPE_ACTION, transaction_id)
             
             # For each info_hash in the request, add stats
-            num_hashes = (len(data) - 16) // 20
             for i in range(num_hashes):
                 # Add fake stats for each hash (we don't actually track peers)
                 response += struct.pack(">III", 0, 0, 0)  # seeders, completed, leechers
             
             self.socket.sendto(response, addr)
-            logger.debug(f"Scrape from {addr}: {num_hashes} hashes")
             
         except Exception as e:
             logger.error(f"Error in scrape handler: {e}")

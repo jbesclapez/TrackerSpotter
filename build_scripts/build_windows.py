@@ -54,15 +54,19 @@ def build_executable():
         # Add data files (static folder)
         f"--add-data={STATIC_DIR}{os.pathsep}trackerspotter/static",
         
-        # Hidden imports (Flask-SocketIO dependencies)
+        # Core dependencies
         "--hidden-import=flask",
+        "--hidden-import=bencodepy",
+        
+        # Flask-SocketIO and dependencies
         "--hidden-import=flask_socketio",
         "--hidden-import=socketio",
         "--hidden-import=socketio.server",
         "--hidden-import=engineio",
         "--hidden-import=engineio.server",
         "--hidden-import=engineio.async_drivers.threading",
-        "--hidden-import=bencodepy",
+        
+        # WebSocket support
         "--hidden-import=simple_websocket",
         "--hidden-import=wsproto",
         "--hidden-import=wsproto.connection",

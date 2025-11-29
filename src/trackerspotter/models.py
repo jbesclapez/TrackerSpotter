@@ -27,6 +27,7 @@ class AnnounceEvent:
     compact: int = 1
     key: str = ""
     raw_query: str = ""
+    raw_headers: str = ""  # Raw HTTP headers as-is for client file making
     
     def __post_init__(self):
         """Set timestamp if not provided"""

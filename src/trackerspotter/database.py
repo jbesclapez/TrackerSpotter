@@ -67,9 +67,16 @@ class Database:
                     numwant INTEGER,
                     compact INTEGER,
                     key TEXT,
-                    raw_query TEXT
+                    raw_query TEXT,
+                    raw_headers TEXT
                 )
             """)
+            
+            # Migration: Add raw_headers column if it doesn't exist (for existing databases)
+            try:
+                conn.execute("ALTER TABLE announces ADD COLUMN raw_headers TEXT")
+            except sqlite3.OperationalError:
+                pass  # Column already exists
             
             # Create indices for faster queries
             conn.execute("""
@@ -102,8 +109,8 @@ class Database:
                 INSERT INTO announces (
                     timestamp, info_hash, info_hash_hex, peer_id,
                     client_ip, client_port, uploaded, downloaded, left,
-                    event, user_agent, numwant, compact, key, raw_query
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    event, user_agent, numwant, compact, key, raw_query, raw_headers
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 event.timestamp.isoformat(),
                 event.info_hash,  # Store as hex string directly
@@ -119,7 +126,8 @@ class Database:
                 event.numwant,
                 event.compact,
                 event.key,
-                event.raw_query
+                event.raw_query,
+                event.raw_headers
             ))
             return cursor.lastrowid
     
