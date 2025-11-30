@@ -79,6 +79,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build instructions
 - Troubleshooting section
 
+## [1.1.3] - 2025-01-XX
+
+### Fixed
+- Release asset uploads now work correctly on tag push
+- GitHub Actions workflow now uploads files automatically when tags are pushed
+- Download links in README now work correctly
+
 ## [1.1.2] - 2025-01-XX
 
 ### Fixed
@@ -157,6 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.3]: https://github.com/jbesclapez/TrackerSpotter/releases/tag/v1.1.3
 [1.1.2]: https://github.com/jbesclapez/TrackerSpotter/releases/tag/v1.1.2
 [1.1.0]: https://github.com/jbesclapez/TrackerSpotter/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jbesclapez/TrackerSpotter/releases/tag/v1.0.0
