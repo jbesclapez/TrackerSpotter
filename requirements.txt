@@ -1,0 +1,11 @@
+# TrackerSpotter - Production Dependencies
+Flask==3.0.0
+Flask-SocketIO==5.3.6
+python-socketio==5.11.0
+python-engineio==4.9.0
+simple-websocket==1.0.0
+bencodepy==0.9.5
+
+# System tray support
+pystray==0.19.5
+Pillow==10.1.0

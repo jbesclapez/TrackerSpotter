@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackerSpotter - Local Tracker Monitor</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🎯 TrackerSpotter</h1>
+                <p class="subtitle">Local BitTorrent Tracker Monitor</p>
+            </div>
+            <div class="connection-status">
+                <span class="status-indicator" id="statusIndicator">●</span>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </header>
+
+        <!-- Quick Start Banner -->
+        <div class="quick-start-banner" id="quickStartBanner">
+            <div class="banner-content">
+                <div class="banner-icon">ℹ️</div>
+                <div class="banner-text">
+                    <h3>Quick Start</h3>
+                    <p><strong>1.</strong> Copy tracker URL for your setup:</p>
+                    <p style="margin-left: 20px;">
+                        <strong>HTTP (local):</strong> <code id="trackerUrlHttp">http://127.0.0.1:6969/announce</code> 
+                        <button class="btn-copy" onclick="copyTrackerUrl('http')">Copy</button>
+                    </p>
+                    <p style="margin-left: 20px;">
+                        <strong>HTTP (Docker):</strong> <code id="trackerUrlHttpDocker">http://host.docker.internal:6969/announce</code> 
+                        <button class="btn-copy" onclick="copyTrackerUrl('http-docker')">Copy</button>
+                    </p>
+                    <p style="margin-left: 20px;">
+                        <strong>UDP (faster):</strong> <code id="trackerUrlUdp">udp://127.0.0.1:6969/announce</code> 
+                        <button class="btn-copy" onclick="copyTrackerUrl('udp')">Copy</button>
+                    </p>
+                    <p style="margin-left: 20px;">
+                        <strong>UDP (Docker):</strong> <code id="trackerUrlUdpDocker">udp://host.docker.internal:6969/announce</code> 
+                        <button class="btn-copy" onclick="copyTrackerUrl('udp-docker')">Copy</button>
+                    </p>
+                    <div id="ipv6UrlsSection" style="display: none;">
+                        <p style="margin-left: 20px;">
+                            <strong>HTTP (IPv6):</strong> <code id="trackerUrlHttpIpv6">http://[::1]:6969/announce</code> 
+                            <button class="btn-copy" onclick="copyTrackerUrl('http-ipv6')">Copy</button>
+                        </p>
+                        <p style="margin-left: 20px;">
+                            <strong>UDP (IPv6):</strong> <code id="trackerUrlUdpIpv6">udp://[::1]:6969/announce</code> 
+                            <button class="btn-copy" onclick="copyTrackerUrl('udp-ipv6')">Copy</button>
+                        </p>
+                    </div>
+                    <p><strong>2.</strong> Add it to your torrent client's tracker list</p>
+                    <p><strong>3.</strong> Start a torrent and watch events appear below!</p>
+                    <p style="font-size: 0.9em; color: rgba(255,255,255,0.85);"><em>Tip: UDP is faster and preferred by most clients</em></p>
+                </div>
+                <button class="banner-close" onclick="closeBanner()">✕</button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalEvents">0</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueTorrents">0</div>
+                <div class="stat-label">Unique Torrents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="startedCount">0</div>
+                <div class="stat-label">Started</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="controls-left">
+                <select id="eventFilter" class="filter-select" onchange="applyFilters()">
+                    <option value="all">All Events</option>
+                    <option value="started">Started</option>
+                    <option value="completed">Completed</option>
+                    <option value="stopped">Stopped</option>
+                    <option value="">Updates</option>
+                    <option value="scrape">Scrape</option>
+                </select>
+
+                <select id="torrentFilter" class="filter-select" onchange="applyFilters()">
+                    <option value="all">All Torrents</option>
+                </select>
+
+                <input type="search" id="searchBox" class="search-input" placeholder="🔍 Search..." oninput="applyFilters()">
+            </div>
+
+            <div class="controls-right">
+                <button class="btn btn-secondary" onclick="exportCSV()">📊 Export CSV</button>
+                <button class="btn btn-secondary" onclick="exportJSON()">📄 Export JSON</button>
+                <button class="btn btn-danger" onclick="clearLogs()">🗑️ Clear All</button>
+                <button class="btn btn-primary" onclick="refreshEvents()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <!-- Events Table -->
+        <div class="table-container">
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Torrent</th>
+                        <th>Client</th>
+                        <th>Downloaded</th>
+                        <th>Uploaded</th>
+                        <th>Remaining</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+                    <tr class="no-events">
+                        <td colspan="8">
+                            <div class="no-events-message">
+                                <div class="no-events-icon">📭</div>
+                                <h3>No events recorded yet</h3>
+                                <p>Copy the tracker URL above and add it to your torrent client to start monitoring.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-header">
+                <h3>Event Details</h3>
+                <button class="detail-close" onclick="closeDetailPanel()">✕</button>
+            </div>
+            <div class="detail-content" id="detailContent">
+                <!-- Details populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>TrackerSpotter <span id="versionDisplay">v1.1.0</span> | 
+               <a href="https://github.com/jbesclapez/TrackerSpotter" target="_blank">GitHub</a> | 
+               Made with ❤️ for the BitTorrent community
+            </p>
+        </footer>
+    </div>
+
+    <!-- Include Socket.IO (bundled locally for offline use) -->
+    <script src="/static/js/socket.io.min.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+

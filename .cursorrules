@@ -1,0 +1,305 @@
+# TrackerSpotter - Cursor Rules
+
+## Project Overview
+TrackerSpotter is a local BitTorrent tracker monitor for Windows that captures and displays announce events from torrent clients in real-time. It's designed for QA, developers, and power users to validate client behavior.
+
+## Technology Stack
+- **Backend**: Python 3.9+ with Flask
+- **Database**: SQLite for event storage
+- **Frontend**: HTML/CSS/JavaScript with Bootstrap and real-time WebSocket updates
+- **Packaging**: PyInstaller for Windows executable distribution
+- **Protocol**: HTTP BitTorrent tracker (BEP 3)
+
+## Code Style & Standards
+
+### Python
+- Follow PEP 8 style guide
+- Use type hints for all function signatures
+- Maximum line length: 100 characters
+- Use meaningful variable names (no single letters except in loops)
+- Docstrings required for all public functions and classes
+- Use `pathlib.Path` for file operations instead of `os.path`
+- Prefer f-strings over .format() or % formatting
+
+### JavaScript
+- Use ES6+ features (const/let, arrow functions, template literals)
+- No jQuery - use vanilla JS or modern frameworks only
+- Use async/await for asynchronous operations
+- 2-space indentation for JS/HTML/CSS
+
+### File Organization
+```
+TrackerSpotter/
+├── src/
+│   ├── tracker_server.py    # Main tracker HTTP server
+│   ├── database.py           # SQLite database operations
+│   ├── models.py             # Data models for announce events
+│   ├── utils.py              # Utility functions (bencode, etc.)
+│   └── static/               # Web UI assets
+│       ├── css/
+│       ├── js/
+│       └── index.html
+├── tests/                    # Unit and integration tests
+├── docs/                     # Documentation and guides
+├── build_scripts/            # PyInstaller and packaging scripts
+├── requirements.txt          # Python dependencies
+├── requirements-dev.txt      # Development dependencies
+├── setup.py                  # Package configuration
+└── trackerspotter.py         # Main entry point
+```
+
+## Development Practices
+
+### Security
+- Never expose the tracker to external networks by default (127.0.0.1 only)
+- Validate all incoming announce parameters
+- Sanitize data before displaying in UI (XSS prevention)
+- Use prepared statements for all database queries
+- Include CORS headers only for localhost origins
+
+### Error Handling
+- Use try-except blocks for all I/O operations
+- Log errors with context (timestamp, operation, details)
+- Display user-friendly error messages in UI
+- Never expose stack traces to end users
+- Graceful degradation: if logging fails, don't crash the tracker
+
+### Performance
+- Use connection pooling for database
+- Limit query results (max 1000 events in UI, pagination for more)
+- Index database on timestamp, info_hash, and event type
+- WebSocket updates should batch events (max 1 update/second)
+- Async operations for non-blocking I/O
+
+### Testing
+- Unit tests for all utility functions (bencode, URL parsing)
+- Integration tests for tracker announce handling
+- Mock tests for database operations
+- Test with actual torrent clients when possible
+- Include edge cases (malformed announces, missing parameters)
+
+## BitTorrent Protocol Specifics
+
+### Announce Request Parameters
+Always expect and handle:
+- `info_hash` (required): 20-byte SHA1 hash (URL-encoded)
+- `peer_id` (required): 20-byte client identifier
+- `port` (required): Client's listening port
+- `uploaded` (required): Total bytes uploaded
+- `downloaded` (required): Total bytes downloaded
+- `left` (required): Bytes remaining to download
+- `event` (optional): started, completed, stopped
+- `compact` (optional): Compact peer list format
+- `numwant` (optional): Number of peers wanted
+
+### Announce Response
+Minimal valid bencoded response:
+```python
+{
+    'interval': 1800,      # 30 minutes
+    'complete': 0,          # Seeders (fake)
+    'incomplete': 0,        # Leechers (fake)
+    'peers': []             # Empty peer list (monitoring only)
+}
+```
+
+### Data Capture
+Store every announce with:
+- Timestamp (ISO 8601 with milliseconds)
+- All announce parameters (uploaded, downloaded, left, event)
+- Client info (IP, port, peer_id, user-agent)
+- Torrent info_hash (hex representation for display)
+- Raw query string (for debugging)
+
+## UI/UX Guidelines
+
+### Design Principles
+- Mobile-first responsive design
+- Keyboard accessible (tab navigation, shortcuts)
+- High contrast for readability
+- Real-time updates without page refresh
+- Zero-friction: tracker URL prominently displayed with copy button
+
+### User Messaging
+- Use clear, non-technical language for errors
+- Provide actionable next steps ("Port in use? Try changing it in Settings")
+- Success messages should be brief and dismissible
+- Loading states for all async operations
+
+### Data Display
+- Timestamps: 24-hour format with milliseconds (14:23:45.123)
+- Bytes: Auto-format (B, KB, MB, GB) with 2 decimal places
+- Info hash: Show first 8 chars with "..." and full in tooltip/detail
+- Events: Color-coded (started=green, completed=blue, stopped=red, update=gray)
+
+## Packaging & Distribution
+
+### Windows Executable
+- Use PyInstaller with `--onefile` for single .exe
+- Include icon file for branding
+- Embed all static assets (HTML, CSS, JS)
+- Bundle SQLite (comes with Python)
+- No external dependencies required
+
+### Build Process
+```bash
+# Install dependencies
+pip install -r requirements.txt
+pip install pyinstaller
+
+# Build executable
+python build_scripts/build_windows.py
+
+# Output: dist/TrackerSpotter.exe
+```
+
+### Version Management
+- Semantic versioning (MAJOR.MINOR.PATCH)
+- Version displayed in UI footer
+- Update version in: setup.py, trackerspotter.py, and docs
+
+## Documentation Requirements
+
+### README.md Must Include
+1. What is TrackerSpotter (one-line summary)
+2. Quick Start (3 steps max)
+3. Screenshots of main UI
+4. System requirements (Windows 10/11, no admin needed)
+5. How to configure torrent clients (qBittorrent, Transmission, Deluge)
+6. Troubleshooting section
+7. License and contributing guidelines
+
+### Code Documentation
+- Docstrings for all public APIs
+- Inline comments for complex logic only
+- Type hints serve as inline documentation
+- Keep comments up-to-date with code changes
+
+## Git & Version Control
+
+### Commit Messages
+Format: `<type>(<scope>): <description>`
+
+Types: feat, fix, docs, style, refactor, test, chore
+
+Examples:
+- `feat(tracker): add support for scrape requests`
+- `fix(ui): correct download progress calculation`
+- `docs(readme): add qBittorrent setup instructions`
+
+### Branching
+- `main`: production-ready code
+- `develop`: integration branch
+- `feature/*`: new features
+- `fix/*`: bug fixes
+- `release/*`: release preparation
+
+### Pull Request Requirements
+- Description of changes
+- Screenshots for UI changes
+- Tests added/updated
+- Documentation updated
+- No linter errors
+
+## Dependencies Philosophy
+
+### Minimize Dependencies
+- Prefer standard library when possible
+- Each dependency must be justified
+- Pin exact versions in requirements.txt
+- Audit dependencies for security regularly
+
+### Core Dependencies (Justified)
+- `Flask`: Lightweight web framework for tracker and UI
+- `Flask-SocketIO`: Real-time WebSocket updates
+- `bencodepy` or built-in: BitTorrent bencoding
+- `PyInstaller` (dev): Create Windows executable
+
+## Testing Strategy
+
+### Test Coverage Goals
+- Utility functions: 100%
+- Tracker announce handling: 90%+
+- Database operations: 85%+
+- UI (manual testing): Critical paths only
+
+### Test Data
+- Include sample announce requests (valid and invalid)
+- Create fixture .torrent files for testing
+- Mock database for fast test execution
+
+## Accessibility
+
+### WCAG 2.1 Level AA Compliance
+- All interactive elements keyboard accessible
+- Alt text for icons
+- ARIA labels for dynamic content
+- Focus indicators visible
+- Color not the only indicator of state
+
+## Internationalization (Future)
+
+### Prepare for i18n
+- All UI strings in separate constants file
+- Use ICU message format for plurals
+- Locale-aware date/time formatting
+- No hardcoded strings in UI code
+
+## Performance Benchmarks
+
+### Target Metrics
+- Startup time: < 2 seconds
+- Announce response time: < 50ms
+- UI update latency: < 100ms
+- Memory usage: < 100MB with 1000 events
+- Can handle 10 announces/second without lag
+
+## Common Pitfalls to Avoid
+
+1. **URL Encoding**: Info hashes are URL-encoded binary data, decode properly
+2. **Bencode Integers**: Can be large, use appropriate data types
+3. **Port Conflicts**: Always check if port is available before binding
+4. **WebSocket Connections**: Clean up on client disconnect
+5. **File Paths**: Use pathlib for cross-platform compatibility
+6. **Database Locking**: SQLite can lock, handle gracefully
+7. **Binary Data**: Info hash and peer_id are binary, not UTF-8 strings
+
+## Resources
+
+### BitTorrent Specifications
+- BEP 3: The BitTorrent Protocol
+- BEP 23: Tracker Returns Compact Peer Lists
+
+### Python Best Practices
+- PEP 8: Style Guide
+- PEP 484: Type Hints
+- Real Python: Flask tutorials
+
+## Questions to Ask Before Implementing
+
+1. Does this need to be configurable? (Prefer sensible defaults)
+2. Will users understand this error message?
+3. Can this fail gracefully without crashing?
+4. Is this the simplest solution?
+5. Does this work for non-technical users?
+
+## Success Criteria Reminder
+
+The user should be able to:
+1. Download and run TrackerSpotter.exe without installation
+2. Copy the tracker URL with one click
+3. See announce events appear within seconds
+4. Filter and export events easily
+5. Create test torrents for validation
+6. Run for hours without crashes or slowdowns
+7. Understand all UI elements without external documentation
+
+---
+
+When in doubt, prioritize:
+1. **User Experience** > Feature completeness
+2. **Reliability** > Performance
+3. **Simplicity** > Flexibility
+4. **Clear errors** > Silent failures
+5. **Security** > Convenience
+
