@@ -303,35 +303,41 @@ def verify_dependencies():
     import os
     if 'DISPLAY' not in os.environ:
         os.environ['DISPLAY'] = ':99'
+        print(f"   [INFO] Set DISPLAY={os.environ['DISPLAY']}")
     
-    import importlib.util
+    # Use importlib.metadata (Python 3.8+) to check packages without importing
+    # This is safer than find_spec which can trigger module loading
+    try:
+        from importlib import metadata
+    except ImportError:
+        # Python < 3.8 fallback
+        import importlib_metadata as metadata
     
-    # Use find_spec for all packages to avoid any imports that might trigger X display
+    # Package names as they appear in pip (not module names)
     packages_to_check = [
         ("flask", "flask"),
-        ("flask_socketio", "flask_socketio"),
+        ("flask-socketio", "flask_socketio"),
         ("bencodepy", "bencodepy"),
-        ("PIL", "Pillow"),
-        ("PyInstaller", "pyinstaller"),
+        ("Pillow", "PIL"),
+        ("pyinstaller", "PyInstaller"),
     ]
     
     missing = []
-    for module_name, package_name in packages_to_check:
+    for package_name, module_name in packages_to_check:
         try:
-            # Use find_spec which doesn't import the module
-            spec = importlib.util.find_spec(module_name)
-            if spec is not None:
-                print(f"   [OK] {package_name}")
-            else:
-                print(f"   [MISSING] {package_name}")
-                missing.append(package_name)
+            # Check if package is installed using metadata (no import happens)
+            dist = metadata.distribution(package_name)
+            print(f"   [OK] {package_name} (version: {dist.version})")
+        except metadata.PackageNotFoundError:
+            print(f"   [MISSING] {package_name}")
+            missing.append(package_name)
         except Exception as e:
             # If check fails, assume it's installed (will fail at runtime if not)
             print(f"   [OK] {package_name} (assumed - check failed: {e})")
     
-    # pystray - just assume it's installed (CI installs it, can't verify without X)
-    # Never try to import or check pystray - it requires X display
-    print(f"   [OK] pystray (skipped - requires X display)")
+    # pystray - NEVER check this - it requires X display and will crash
+    # It's installed via requirements.txt, so we assume it's there
+    print(f"   [OK] pystray (skipped - requires X display, assumed installed)")
     
     if missing:
         print(f"\n[ERROR] Missing packages: {', '.join(missing)}")
