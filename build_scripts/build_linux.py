@@ -301,8 +301,13 @@ def verify_dependencies():
     
     # In CI environments, skip verification to avoid X display issues
     # Packages are installed via requirements.txt, so we trust they're there
-    if os.environ.get('CI') == 'true' or os.environ.get('GITHUB_ACTIONS') == 'true':
+    # Check multiple CI environment variables (GitHub Actions sets GITHUB_ACTIONS)
+    ci_env_vars = ['CI', 'GITHUB_ACTIONS', 'GITHUB_WORKFLOW', 'RUNNER_OS']
+    is_ci = any(os.environ.get(var) for var in ci_env_vars)
+    
+    if is_ci:
         print("Verifying dependencies...")
+        print(f"   [INFO] Detected CI environment (env vars: {[f'{v}={os.environ.get(v)}' for v in ci_env_vars if os.environ.get(v)]})")
         print("   [SKIP] Running in CI - dependencies installed via requirements.txt")
         print("   [OK] All dependencies (assumed installed)")
         return True
