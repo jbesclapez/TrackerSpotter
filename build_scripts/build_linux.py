@@ -296,49 +296,35 @@ echo ""
 
 
 def verify_dependencies():
-    """Verify all required packages are installed"""
+    """Verify all required packages are installed without importing them"""
     print("Verifying dependencies...")
     
-    # Core packages to verify (pystray excluded - requires X display to import)
-    required_packages = [
+    import importlib.util
+    
+    # Use find_spec for all packages to avoid any imports that might trigger X display
+    packages_to_check = [
         ("flask", "flask"),
         ("flask_socketio", "flask_socketio"),
         ("bencodepy", "bencodepy"),
+        ("PIL", "Pillow"),
+        ("PyInstaller", "pyinstaller"),
     ]
     
     missing = []
-    for module_name, package_name in required_packages:
+    for module_name, package_name in packages_to_check:
         try:
-            __import__(module_name)
-            print(f"   [OK] {package_name}")
-        except ImportError:
-            print(f"   [MISSING] {package_name}")
-            missing.append(package_name)
-    
-    # Check Pillow without full import (just check if installed)
-    try:
-        import importlib.util
-        if importlib.util.find_spec("PIL") is not None:
-            print(f"   [OK] Pillow")
-        else:
-            print(f"   [MISSING] Pillow")
-            missing.append("Pillow")
-    except:
-        print(f"   [OK] Pillow (assumed)")
-    
-    # Check PyInstaller
-    try:
-        import importlib.util
-        if importlib.util.find_spec("PyInstaller") is not None:
-            print(f"   [OK] pyinstaller")
-        else:
-            print(f"   [MISSING] pyinstaller")
-            missing.append("pyinstaller")
-    except:
-        print(f"   [OK] pyinstaller (assumed)")
+            spec = importlib.util.find_spec(module_name)
+            if spec is not None:
+                print(f"   [OK] {package_name}")
+            else:
+                print(f"   [MISSING] {package_name}")
+                missing.append(package_name)
+        except Exception as e:
+            # If check fails, assume it's installed (will fail at runtime if not)
+            print(f"   [OK] {package_name} (assumed - check failed: {e})")
     
     # pystray - just assume it's installed (CI installs it, can't verify without X)
-    print(f"   [OK] pystray (skipped import - headless build)")
+    print(f"   [OK] pystray (skipped - requires X display)")
     
     if missing:
         print(f"\n[ERROR] Missing packages: {', '.join(missing)}")
