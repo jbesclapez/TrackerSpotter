@@ -118,12 +118,6 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
       
-      - name: Verify display
-        run: |
-          export DISPLAY=:99
-          echo "DISPLAY=$DISPLAY"
-          xdpyinfo -display :99 || echo "Display info not available"
-      
       - name: Generate icons
         run: |
           export DISPLAY=:99

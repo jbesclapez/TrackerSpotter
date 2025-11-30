@@ -307,7 +307,6 @@ def verify_dependencies():
     
     if is_ci:
         print("Verifying dependencies...")
-        print(f"   [INFO] Detected CI environment (env vars: {[f'{v}={os.environ.get(v)}' for v in ci_env_vars if os.environ.get(v)]})")
         print("   [SKIP] Running in CI - dependencies installed via requirements.txt")
         print("   [OK] All dependencies (assumed installed)")
         return True
@@ -380,10 +379,8 @@ def main():
 =============================================================
           TrackerSpotter Build Script
           Creating Linux Executable
-          (CI Mode - skipping dependency verification)
 =============================================================
 """)
-        print("[INFO] Running in CI - skipping dependency verification")
     else:
         print("""
 =============================================================
