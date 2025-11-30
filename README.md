@@ -6,13 +6,15 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 
 <div align="center">
 
-### 📥 Download for Windows
+### 📥 Download TrackerSpotter v1.1.0
 
-[![Download Latest Release](https://img.shields.io/badge/Download-v1.1.0_Windows-blue?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.0/TrackerSpotter_v1.1.0_Windows.zip)
+| Platform | Download | Notes |
+|:--------:|:--------:|:------|
+| 🪟 **Windows** | [![Download](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.0/TrackerSpotter_v1.1.0_Windows.zip) | Single .exe • No install • 52 MB |
+| 🍎 **macOS** | [![Download](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.0/TrackerSpotter_v1.1.0_macOS.dmg) | .app bundle • ~50 MB |
+| 🐧 **Linux** | [![Download](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.0/TrackerSpotter_v1.1.0_Linux.tar.gz) | Binary + installer • ~45 MB |
 
-**Single .exe file • No installation required • 52MB**
-
-[View All Releases](https://github.com/jbesclapez/TrackerSpotter/releases) | [macOS/Linux: Build from Source](#building-from-source)
+**[📋 View All Releases](https://github.com/jbesclapez/TrackerSpotter/releases)** • **[📖 Installation Guide](#-quick-start)**
 
 </div>
 
