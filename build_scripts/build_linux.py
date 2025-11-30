@@ -307,21 +307,6 @@ def verify_dependencies():
         ("PyInstaller", "pyinstaller"),
     ]
     
-    # pystray needs special handling on headless systems
-    pystray_ok = False
-    try:
-        # Try to import without initializing (avoid X display requirement)
-        import importlib.util
-        spec = importlib.util.find_spec("pystray")
-        if spec is not None:
-            print(f"   [OK] pystray")
-            pystray_ok = True
-        else:
-            print(f"   [MISSING] pystray")
-    except Exception as e:
-        print(f"   [WARNING] pystray check failed (headless?): {e}")
-        pystray_ok = True  # Assume it's installed, will fail at runtime if not
-    
     missing = []
     for module_name, package_name in required_packages:
         try:
@@ -331,14 +316,21 @@ def verify_dependencies():
             print(f"   [MISSING] {package_name}")
             missing.append(package_name)
     
+    # Check pystray without importing (avoids X display requirement)
+    try:
+        import importlib.util
+        spec = importlib.util.find_spec("pystray")
+        if spec is not None:
+            print(f"   [OK] pystray (not imported - headless safe)")
+        else:
+            print(f"   [MISSING] pystray")
+            missing.append("pystray")
+    except Exception as e:
+        print(f"   [WARNING] pystray check skipped: {e}")
+    
     if missing:
         print(f"\n[ERROR] Missing packages: {', '.join(missing)}")
         print(f"Install with: pip install {' '.join(missing)}")
-        return False
-    
-    if not pystray_ok:
-        missing.append("pystray")
-        print(f"\n[ERROR] Missing packages: pystray")
         return False
     
     print("[SUCCESS] All dependencies installed")
