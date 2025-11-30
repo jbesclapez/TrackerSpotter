@@ -369,24 +369,42 @@ def verify_dependencies():
 
 def main():
     """Main build process"""
-    print("""
+    import os
+    
+    # Early CI detection - skip verification entirely in CI
+    # GitHub Actions sets GITHUB_ACTIONS=true, RUNNER_OS, etc.
+    is_ci = any(os.environ.get(var) for var in ['CI', 'GITHUB_ACTIONS', 'GITHUB_WORKFLOW', 'RUNNER_OS'])
+    
+    if is_ci:
+        print("""
+=============================================================
+          TrackerSpotter Build Script
+          Creating Linux Executable
+          (CI Mode - skipping dependency verification)
+=============================================================
+""")
+        print("[INFO] Running in CI - skipping dependency verification")
+    else:
+        print("""
 =============================================================
           TrackerSpotter Build Script
           Creating Linux Executable
 =============================================================
 """)
     
-    # Check platform
+    # Check platform (skip interactive prompt in CI)
     if sys.platform != 'linux':
         print("[WARNING] This script is designed for Linux.")
         print("         Cross-compilation may not work correctly.")
-        response = input("Continue anyway? [y/N]: ")
-        if response.lower() != 'y':
-            sys.exit(0)
+        if not is_ci:
+            response = input("Continue anyway? [y/N]: ")
+            if response.lower() != 'y':
+                sys.exit(0)
     
-    # Verify dependencies
-    if not verify_dependencies():
-        sys.exit(1)
+    # Verify dependencies (skip in CI)
+    if not is_ci:
+        if not verify_dependencies():
+            sys.exit(1)
     
     # Clean old builds
     clean_build_directories()
