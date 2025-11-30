@@ -138,7 +138,7 @@ def create_distribution_package():
     print("\nCreating distribution package...")
     
     # Create distribution directory
-    dist_package = DIST_DIR / f"{APP_NAME}_v{VERSION}_Linux"
+    dist_package = DIST_DIR / f"{APP_NAME}_Linux"
     dist_package.mkdir(exist_ok=True)
     
     # Copy executable
@@ -272,12 +272,12 @@ echo ""
     
     # Create tar.gz archive (more common on Linux)
     try:
-        archive_name = f"{APP_NAME}_v{VERSION}_Linux"
+        archive_name = f"{APP_NAME}_Linux"
         archive_path = shutil.make_archive(
             str(DIST_DIR / archive_name),
             'gztar',
             DIST_DIR,
-            f"{APP_NAME}_v{VERSION}_Linux"
+            f"{APP_NAME}_Linux"
         )
         print(f"tar.gz archive created: {archive_path}")
     except Exception as e:
@@ -286,7 +286,7 @@ echo ""
     # Also create ZIP for convenience
     try:
         archive_path = shutil.make_archive(
-            str(DIST_DIR / f"{APP_NAME}_v{VERSION}_Linux"),
+            str(DIST_DIR / f"{APP_NAME}_Linux"),
             'zip',
             dist_package
         )

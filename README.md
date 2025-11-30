@@ -6,13 +6,13 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 
 <div align="center">
 
-### 📥 Download TrackerSpotter v1.1.3
+### 📥 Download TrackerSpotter
 
 | Platform | Download | Notes |
 |:--------:|:--------:|:------|
-| 🪟 **Windows** | [![Download](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.3/TrackerSpotter_v1.1.3_Windows.zip) | Single .exe • No install • 52 MB |
-| 🍎 **macOS** | [![Download](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.3/TrackerSpotter_v1.1.3_macOS.dmg) | .app bundle • ~50 MB |
-| 🐧 **Linux** | [![Download](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.3/TrackerSpotter_v1.1.3_Linux.tar.gz) | Binary + installer • ~45 MB |
+| 🪟 **Windows** | [![Download](https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/latest/TrackerSpotter_Windows.zip) | Single .exe • No install • 52 MB |
+| 🍎 **macOS** | [![Download](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/latest/TrackerSpotter_macOS.dmg) | .app bundle • ~50 MB |
+| 🐧 **Linux** | [![Download](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/jbesclapez/TrackerSpotter/releases/download/latest/TrackerSpotter_Linux.tar.gz) | Binary + installer • ~45 MB |
 
 **[📋 View All Releases](https://github.com/jbesclapez/TrackerSpotter/releases)** • **[📖 Installation Guide](#-quick-start)**
 
@@ -22,7 +22,7 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 
 ✅ **Cross-platform:** Windows, macOS, and Linux support
 
-![Version](https://img.shields.io/badge/version-1.1.3-blue.svg)
+![Version](https://img.shields.io/badge/version-latest-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -55,13 +55,13 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 4. **Copy a tracker URL** from the dashboard
 
 #### macOS
-1. **Download** `TrackerSpotter_v1.1.3_macOS.dmg` or `.zip` from the [releases page](https://github.com/jbesclapez/TrackerSpotter/releases)
+1. **Download** `TrackerSpotter_macOS.dmg` or `.zip` from the [releases page](https://github.com/jbesclapez/TrackerSpotter/releases/latest)
 2. **Drag to Applications** (or run directly from .zip)
 3. **Right-click → Open** (first time only, to bypass Gatekeeper)
 4. **Copy a tracker URL** from the dashboard
 
 #### Linux
-1. **Download** `TrackerSpotter_v1.1.3_Linux.tar.gz` from the [releases page](https://github.com/jbesclapez/TrackerSpotter/releases)
+1. **Download** `TrackerSpotter_Linux.tar.gz` from the [releases page](https://github.com/jbesclapez/TrackerSpotter/releases/latest)
 2. **Extract and install**: `sudo ./install.sh` (or run `./trackerspotter` directly)
 3. **Copy a tracker URL** from the dashboard
 
@@ -261,13 +261,13 @@ python build_scripts/build_windows.py
 #### macOS
 ```bash
 python build_scripts/build_macos.py
-# Output: dist/TrackerSpotter.app and dist/TrackerSpotter_v1.1.3_macOS.dmg
+# Output: dist/TrackerSpotter.app and dist/TrackerSpotter_macOS.dmg
 ```
 
 #### Linux
 ```bash
 python build_scripts/build_linux.py
-# Output: dist/trackerspotter and dist/TrackerSpotter_v1.1.3_Linux.tar.gz
+# Output: dist/trackerspotter and dist/TrackerSpotter_Linux.tar.gz
 ```
 
 ### Generate Icons (All Platforms)
@@ -337,7 +337,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📦 What's Included
 
-TrackerSpotter v1.1.3 is a complete, production-ready monitoring solution with:
+TrackerSpotter is a complete, production-ready monitoring solution with:
 
 - ✅ HTTP and UDP tracker implementations (BEP 3, BEP 15)
 - ✅ Scrape request support

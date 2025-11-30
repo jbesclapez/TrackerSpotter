@@ -123,7 +123,7 @@ def create_distribution_package():
     print("\nCreating distribution package...")
     
     # Create distribution directory
-    dist_package = DIST_DIR / f"{APP_NAME}_v{VERSION}_Windows"
+    dist_package = DIST_DIR / f"{APP_NAME}_Windows"
     dist_package.mkdir(exist_ok=True)
     
     # Copy executable
@@ -196,7 +196,7 @@ Made with love for the BitTorrent community
     
     # Create ZIP archive
     try:
-        archive_name = f"{APP_NAME}_v{VERSION}_Windows"
+        archive_name = f"{APP_NAME}_Windows"
         archive_path = shutil.make_archive(
             str(DIST_DIR / archive_name),
             'zip',

@@ -1,12 +1,10 @@
 name: Build Release
 
 on:
-  release:
-    types: [created]
   workflow_dispatch:  # Manual trigger from Actions tab
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main  # Build on every push to main
 
 permissions:
   contents: write  # Required to upload release assets
@@ -34,18 +32,14 @@ jobs:
       - name: Build Windows executable
         run: python build_scripts/build_windows.py
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TrackerSpotter-Windows
-          path: dist/TrackerSpotter_v*_Windows.zip
-      
-      - name: Upload to Release
-        if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      - name: Upload to Latest Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/TrackerSpotter_v*_Windows.zip
-          tag: ${{ github.ref_name }}
+          files: dist/TrackerSpotter_Windows.zip
+          tag_name: latest
+          name: Latest Release
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -71,22 +65,16 @@ jobs:
       - name: Build macOS app
         run: python build_scripts/build_macos.py
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TrackerSpotter-macOS
-          path: |
-            dist/TrackerSpotter_v*_macOS.zip
-            dist/TrackerSpotter_v*_macOS.dmg
-      
-      - name: Upload to Release
-        if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      - name: Upload to Latest Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/TrackerSpotter_v*_macOS.zip
-            dist/TrackerSpotter_v*_macOS.dmg
-          tag: ${{ github.ref_name }}
+            dist/TrackerSpotter_macOS.zip
+            dist/TrackerSpotter_macOS.dmg
+          tag_name: latest
+          name: Latest Release
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -104,7 +92,6 @@ jobs:
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
           sleep 5
-          # Verify Xvfb is running
           xdpyinfo -display :99 > /dev/null 2>&1 || (echo "Xvfb failed to start" && exit 1)
           echo "Xvfb is running on display :99"
       
@@ -130,18 +117,13 @@ jobs:
           export DISPLAY=:99
           python build_scripts/build_linux.py
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TrackerSpotter-Linux
-          path: dist/TrackerSpotter_v*_Linux.tar.gz
-      
-      - name: Upload to Release
-        if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      - name: Upload to Latest Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/TrackerSpotter_v*_Linux.tar.gz
-          tag: ${{ github.ref_name }}
+          files: dist/TrackerSpotter_Linux.tar.gz
+          tag_name: latest
+          name: Latest Release
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

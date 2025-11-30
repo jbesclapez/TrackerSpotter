@@ -126,7 +126,7 @@ def create_distribution_package():
     print("\nCreating distribution package...")
     
     # Create distribution directory
-    dist_package = DIST_DIR / f"{APP_NAME}_v{VERSION}_macOS"
+    dist_package = DIST_DIR / f"{APP_NAME}_macOS"
     dist_package.mkdir(exist_ok=True)
     
     # Copy app bundle
@@ -163,7 +163,7 @@ def create_distribution_package():
     
     # Create ZIP archive
     try:
-        archive_name = f"{APP_NAME}_v{VERSION}_macOS"
+        archive_name = f"{APP_NAME}_macOS"
         archive_path = shutil.make_archive(
             str(DIST_DIR / archive_name),
             'zip',
@@ -176,7 +176,7 @@ def create_distribution_package():
     # Also create DMG if hdiutil is available (macOS only)
     try:
         import subprocess
-        dmg_path = DIST_DIR / f"{APP_NAME}_v{VERSION}_macOS.dmg"
+        dmg_path = DIST_DIR / f"{APP_NAME}_macOS.dmg"
         
         # Remove existing DMG
         if dmg_path.exists():
