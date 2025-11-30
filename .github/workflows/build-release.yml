@@ -8,6 +8,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write  # Required to upload release assets
+
 jobs:
   build-windows:
     runs-on: windows-latest
