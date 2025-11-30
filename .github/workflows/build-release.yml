@@ -49,7 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-macos:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       
@@ -108,7 +108,15 @@ jobs:
         run: python build_scripts/generate_icons.py
       
       - name: Build Linux executable
-        run: python build_scripts/build_linux.py
+        env:
+          DISPLAY: ':99'  # Dummy display for headless environment
+        run: |
+          # Start virtual display for pystray
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1024x768x24 &
+          sleep 2
+          python build_scripts/build_linux.py
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
