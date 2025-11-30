@@ -125,10 +125,14 @@ jobs:
           xdpyinfo -display :99 || echo "Display info not available"
       
       - name: Generate icons
-        run: python build_scripts/generate_icons.py
+        run: |
+          export DISPLAY=:99
+          python build_scripts/generate_icons.py
       
       - name: Build Linux executable
-        run: python build_scripts/build_linux.py
+        run: |
+          export DISPLAY=:99
+          python build_scripts/build_linux.py
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
