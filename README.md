@@ -4,6 +4,20 @@
 
 Perfect for QA, developers, and power users who need to validate torrent client behavior, debug announce issues, or understand the BitTorrent protocol.
 
+<div align="center">
+
+### 📥 Download for Windows
+
+[![Download Latest Release](https://img.shields.io/badge/Download-v1.1.0_Windows-blue?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/jbesclapez/TrackerSpotter/releases/download/v1.1.0/TrackerSpotter_v1.1.0_Windows.zip)
+
+**Single .exe file • No installation required • 52MB**
+
+[View All Releases](https://github.com/jbesclapez/TrackerSpotter/releases) | [macOS/Linux: Build from Source](#building-from-source)
+
+</div>
+
+---
+
 ✅ **Cross-platform:** Windows, macOS, and Linux support
 
 ![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
@@ -33,9 +47,10 @@ Perfect for QA, developers, and power users who need to validate torrent client 
 ### For End Users
 
 #### Windows
-1. **Download** `TrackerSpotter.exe` from the [releases page](https://github.com/jbesclapez/TrackerSpotter/releases)
-2. **Double-click** to run (browser opens automatically, tray icon appears)
-3. **Copy a tracker URL** from the dashboard
+1. **Download** the [latest release](https://github.com/jbesclapez/TrackerSpotter/releases/latest) (click the big blue button above!)
+2. **Extract** the ZIP file
+3. **Double-click** `TrackerSpotter.exe` to run (browser opens automatically, tray icon appears)
+4. **Copy a tracker URL** from the dashboard
 
 #### macOS
 1. **Download** `TrackerSpotter.dmg` or `.zip` from the [releases page](https://github.com/jbesclapez/TrackerSpotter/releases)

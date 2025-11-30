@@ -104,8 +104,8 @@ def build_executable():
     ]
     
     # Add icon if available
-    if ICON_FILE and Path(ICON_FILE).exists():
-        args.extend(["--icon", ICON_FILE])
+    if ICON_FILE and ICON_FILE.exists():
+        args.extend(["--icon", str(ICON_FILE)])
     
     # Run PyInstaller
     try:
