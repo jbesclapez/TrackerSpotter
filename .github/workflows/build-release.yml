@@ -98,9 +98,13 @@ jobs:
       - name: Start Xvfb
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1920x1080x24 &
-          sleep 3
+          sudo apt-get install -y xvfb x11-utils
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 5
+          # Verify Xvfb is running
+          xdpyinfo -display :99 > /dev/null 2>&1 || (echo "Xvfb failed to start" && exit 1)
+          echo "Xvfb is running on display :99"
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -109,12 +113,14 @@ jobs:
       
       - name: Install dependencies
         run: |
+          export DISPLAY=:99
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
       
       - name: Verify display
         run: |
+          export DISPLAY=:99
           echo "DISPLAY=$DISPLAY"
           xdpyinfo -display :99 || echo "Display info not available"
       

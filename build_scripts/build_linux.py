@@ -299,6 +299,11 @@ def verify_dependencies():
     """Verify all required packages are installed without importing them"""
     print("Verifying dependencies...")
     
+    # Set DISPLAY environment variable if not set (for headless environments)
+    import os
+    if 'DISPLAY' not in os.environ:
+        os.environ['DISPLAY'] = ':99'
+    
     import importlib.util
     
     # Use find_spec for all packages to avoid any imports that might trigger X display
@@ -313,6 +318,7 @@ def verify_dependencies():
     missing = []
     for module_name, package_name in packages_to_check:
         try:
+            # Use find_spec which doesn't import the module
             spec = importlib.util.find_spec(module_name)
             if spec is not None:
                 print(f"   [OK] {package_name}")
@@ -324,6 +330,7 @@ def verify_dependencies():
             print(f"   [OK] {package_name} (assumed - check failed: {e})")
     
     # pystray - just assume it's installed (CI installs it, can't verify without X)
+    # Never try to import or check pystray - it requires X display
     print(f"   [OK] pystray (skipped - requires X display)")
     
     if missing:
