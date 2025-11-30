@@ -79,6 +79,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build instructions
 - Troubleshooting section
 
+## [1.1.2] - 2025-01-XX
+
+### Fixed
+- Linux build failures in CI environments (pystray/Xlib display issues)
+- Dependency verification now skipped in CI to prevent X display initialization
+- Improved CI detection with multiple environment variable checks
+
+### Changed
+- Cleaned up verbose debug output from CI fixes
+- Updated README download links to v1.1.2
+
+### Technical
+- Build scripts now detect CI environments and skip dependency verification
+- Xvfb properly configured for headless Linux builds
+- More robust CI environment detection
+
 ## [1.1.0] - 2025-11-30
 
 ### Added - Protocol Support
@@ -141,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.2]: https://github.com/jbesclapez/TrackerSpotter/releases/tag/v1.1.2
 [1.1.0]: https://github.com/jbesclapez/TrackerSpotter/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jbesclapez/TrackerSpotter/releases/tag/v1.0.0
 
